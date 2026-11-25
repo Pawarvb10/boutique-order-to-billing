@@ -1,46 +1,46 @@
-# Boutique Order-to-Billing (POC)
+# Tasmia Designers · Studio — Boutique Order-to-Billing (v3.1)
 
-A single-file web app for a tailoring boutique. It covers the whole flow from taking a client's measurements to sending the invoice: measurements, style preferences, pieces and materials, worker assignment, delivery dates based on worker bandwidth, production tracking, bottleneck alerts and invoicing.
+A single-file web app for a tailoring boutique. It covers the whole flow from a client's first visit to the final invoice: family CRM, article-wise measurements on diagrams, design approval, production planning by worker bandwidth, trials and alterations, QC, delivery, payments and invoices.
 
-No install, no server, no build step. Open `index.html` in Chrome or Edge.
+No install and no server. Open `index.html` in Chrome or Edge, choose **Load demo studio**, and sign in as Owner with PIN **1111**.
 
-## Run it
+## What's new in v3.1
 
-```bash
-git clone https://github.com/Pawarvb10/boutique-order-to-billing.git
-cd boutique-order-to-billing
-# then double-click index.html, or:
-python3 -m http.server 8000   # and open http://localhost:8000
-```
-
-Demo data (customers, orders, workers, designs) loads on first launch. **Setup → Reset to demo data** brings it back at any time.
+- **Measurement diagrams.** Every measurement on the studio's printed sheets has its own 2D diagram, in the same order and with the same title as the sheet: Blouse (24), Top (25), Bottom (20) and Mens (25). "Length / Round" items take two values. Each article can be measured in inches or cm; switching converts the values entered so far.
+- **Article-wise orders.** Select client → add article → choose the family member → quantity → enter measurements on the diagrams → add the next article. One order can hold two blouse types, a top and bottom for a daughter, and a kurta for a husband, each with its own quantity and measurements.
+- **Family CRM.** Each customer is the primary member and can have family members, each with a relation, gender, date of birth (age is worked out automatically), phone and notes. Measurements are stored per member, per article, with version history.
+- **Invoices in the studio's format.** The order-details table has the studio's charge columns: Basic Stitching, Patterning, Work, Hangings, Fabric, Dyeing, Alterations, Saree Fall & Picco, Tassels, Steam Press, Drywash and Others. Each column shows the charge for one piece, then quantity and total. Each article has a line describing the work. The summary deducts the discount and referral discount to give the amount payable, followed by payment details, notes (delivery date, trial date, special instructions) and a thank-you footer. The PDF is landscape A4.
 
 ## Modules
 
-| Module | What it does |
+| Area | What it does |
 |---|---|
-| **Orders** | Measurements per dress type, a required client-liking / style note, pieces and sub-components with unit price, and a work plan (stage, piece, worker, pricing). Cost and delivery date update as you type. |
-| **Scheduling** | Places every open task in its worker's queue using hours per day, weekly offs and holidays. Tasks within a stage run in parallel and stages run in sequence. Orders are queued by priority and then promised date. |
-| **Costing** | Pricing per piece, per hour × complexity factor (for embroidery and hand work), fixed, or external vendor charge. Shows materials + labour + external = input cost, then markup, override, GST and margin. |
-| **Production board** | Kanban by stage, Start/Done buttons, planned-vs-actual timeline, printable job cards. |
-| **Workers & load** | Queue hours and days per worker, next free date, 12-day capacity heatmap. |
-| **Alerts** | Flags late or at-risk orders, overrunning tasks, overdue vendor work, unassigned tasks, hand-off delays, overloaded workers and stage bottlenecks. Sends alerts to the admin via WhatsApp or email. |
-| **Configurator** | Dress types (measurement fields, default pieces, default work plan) and a design catalogue: stencils, sample photos, 3D renders / `.glb` model, a drag-to-rotate 360° view, and add-on materials and work that get added to an order's plan. |
-| **Communication** | Editable SMS / WhatsApp presets with fields like `{customer_first}`, `{order_no}`, `{balance}`, `{upi_id}`. Offers to send automatically on order saved / ready / delivered. Keeps a sent log. |
-| **Invoices** | GST invoice (CGST/SGST or IGST) with logo, GSTIN, UPI and bank details, optional per-piece breakdown, amount in words, payments and balance. Print or save as PDF. |
-| **Shop profile** | Logo, address, mobile, website, GSTIN, PAN, UPI ID, bank details, tax settings. |
+| Orders & garments | Article-wise booking, each garment with its own file: measurements, specs, design versions and customer approval, workflow, materials, trials, QC, billing and change history |
+| Customers & family | Household CRM with members and relations, measurement sets per member and article, alteration history, customer-supplied materials |
+| Production | Production board, stitching & delivery planner, embroidery & handwork queue, trials & alterations, QC & delivery handover |
+| Resources | Workers (skills, hours, efficiency, leave, piece/hourly pay, ledger), outside vendors, materials & stock |
+| Money | Payments and receipts, invoices (whole order or per garment), owner reports |
+| Studio | Design catalogue (stencils, samples, 3D, 360°), garment types (measurement sheets, specs, components, workflow), SMS / WhatsApp presets, setup (shop profile, calendar, QC checklist, billing heads, users & roles, backups) |
 
-## Data & limits
+## Storage
 
-- Data is stored in the browser: `localStorage` for records, IndexedDB for images and 3D files. Each browser has its own copy.
-- Back up with **Setup → Export data + images** and restore with **Import**.
-- WhatsApp / SMS open on the device with the message filled in; a person presses send. Sending without that step would need an SMS or WhatsApp Business API provider.
-- The 3D model viewer (`<model-viewer>`) loads from a CDN, so it needs an internet connection.
-- Single user, no login. Confirm the GST rate and SAC/HSN code with your CA before using invoices for real.
+- **On one device:** data is saved in the browser (localStorage + IndexedDB), with a separate PIN login for each staff member.
+- **Shared link (Claude artifact):** uses a central database, so every phone and computer sees the same data. Each person signs in with their own account and the owner grants roles. Setup changes are limited to admins.
+- Data from an earlier version is converted automatically: family members are created from existing profiles, article sheets are attached to garment types, and the old billing heads are mapped onto the new invoice columns.
 
-## Next steps toward production
+## Develop
 
-- Backend + database (e.g. Node/Python + Postgres) so staff share one set of orders
-- Login and roles: admin, front desk, workers
-- SMS / WhatsApp Business API for messages sent without manual tapping
-- Worker mobile view to start/finish tasks from the shop floor
+The app is built from the files in `src/` into the root `index.html`:
+
+```bash
+python3 build.py
+```
+
+`test/t1.py` … `test/t6.py` are Playwright smoke tests: logic, full workflow and PDFs, central-database mode (with `mock.js`), mobile layout, the measurement and family flow, and invoices. Screenshots and PDFs are written to `test/out/`. `test/t2.py` also uploads two local images; change those paths before running it.
+
+`v2/index.html` is the earlier v2 version, kept for reference.
+
+## Notes
+
+- WhatsApp / SMS messages open with the text already filled in, and a person presses send. Sending fully automatically would need a WhatsApp Business / SMS gateway.
+- GST is added only when a GST % is set. Confirm the rate and SAC code with your CA before using the invoices for real.
