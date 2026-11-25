@@ -1,0 +1,1604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Boutique Order-to-Billing · POC</title>
+<style>
+:root{--bg:#f6f2ec;--panel:#fff;--ink:#2b2226;--muted:#7d7074;--line:#e7ded6;--accent:#7a2948;--accent-soft:#f4e6ec;--gold:#a8741a;--ok:#2e7d4f;--ok-soft:#e5f3ea;--warn:#a56300;--warn-soft:#fbf0dc;--bad:#b3261e;--bad-soft:#fbe6e4;--info:#2f5d8a;--info-soft:#e6eef7}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font:13.5px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+a{color:var(--accent)}
+.app{display:flex;min-height:100vh}
+nav.side{width:215px;background:#2b1a22;color:#eadfe3;padding:18px 12px;position:sticky;top:0;height:100vh;flex-shrink:0;overflow:auto}
+.brand{font-family:Georgia,serif;font-size:19px;color:#fff;padding:4px 10px 14px;line-height:1.2}
+.brand small{display:block;font:11px system-ui;color:#c9b3bd;letter-spacing:.08em;text-transform:uppercase;margin-top:4px}
+nav.side a{display:flex;justify-content:space-between;align-items:center;color:#eadfe3;text-decoration:none;padding:9px 10px;border-radius:8px;margin:2px 0}
+nav.side a:hover{background:#3d2631}
+nav.side a.on{background:var(--accent);color:#fff}
+nav.side .foot{font-size:11px;color:#a8939c;padding:16px 10px 0;line-height:1.5}
+.badge{background:#e0453a;color:#fff;border-radius:10px;padding:0 7px;font-size:11px;line-height:18px}
+main{flex:1;padding:22px 28px 70px;min-width:0}
+h1{font-family:Georgia,serif;font-weight:normal;font-size:26px;margin:0 0 4px}
+h2{font-size:15px;margin:0 0 12px}
+h3{font-size:11.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px;font-weight:600}
+.sub{color:var(--muted);margin-bottom:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.row+.row{margin-top:8px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:1050px){.grid2{grid-template-columns:1fr}}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.kpi b{display:block;font-size:21px;font-weight:600;margin-top:2px}
+.kpi span{color:var(--muted);font-size:12px}
+.kpi.bad b{color:var(--bad)} .kpi.ok b{color:var(--ok)} .kpi.warn b{color:var(--warn)}
+table{width:100%;border-collapse:collapse}
+th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:600;background:#faf7f3;white-space:nowrap}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+tr.click{cursor:pointer}
+tr.click:hover td{background:#fbf6f8}
+table.ed td{padding:4px}
+input,select,textarea{font:inherit;color:inherit;border:1px solid #d9cec5;border-radius:7px;padding:6px 8px;background:#fff;width:100%}
+input[type=checkbox]{width:auto;padding:0}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent-soft);border-color:var(--accent)}
+td input,td select{padding:4px 6px}
+textarea{resize:vertical}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:3px}
+label.inline{display:inline-flex;gap:5px;align-items:center;color:var(--ink);font-size:13px;margin:0 10px 0 0}
+.f{flex:1;min-width:140px}
+.f.s{flex:0 0 120px;min-width:100px}
+button,.btn{font:inherit;border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 12px;cursor:pointer;color:var(--ink);text-decoration:none;display:inline-block;white-space:nowrap}
+button:hover,.btn:hover{border-color:var(--accent)}
+.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+.pri:hover{background:#621f39}
+.sm{padding:3px 9px;font-size:12px}
+.ghost{background:none;border-color:transparent;color:var(--muted)}
+.danger{color:var(--bad)}
+.chip{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11.5px;background:#eee;white-space:nowrap;font-family:system-ui}
+.c-ok{background:var(--ok-soft);color:var(--ok)} .c-warn{background:var(--warn-soft);color:var(--warn)} .c-bad{background:var(--bad-soft);color:var(--bad)} .c-info{background:var(--info-soft);color:var(--info)} .c-acc{background:var(--accent-soft);color:var(--accent)} .c-mut{background:#efebe7;color:var(--muted)}
+.muted{color:var(--muted)} .right{text-align:right} .sp{flex:1} .acc{color:var(--accent)}
+.bar{height:8px;background:#efe7e0;border-radius:5px;overflow:hidden;min-width:80px}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:5px}
+.bar i.warn{background:var(--warn)} .bar i.bad{background:var(--bad)} .bar i.ok{background:var(--ok)}
+.note{background:#fbf8f4;border:1px dashed #dccfc4;border-radius:8px;padding:10px 12px;margin-top:10px}
+.style-note{background:#fff8e6;border-left:3px solid var(--gold);padding:8px 12px;border-radius:6px;margin:8px 0}
+.hint{font-size:12px;color:var(--muted);margin-top:6px}
+.req{color:var(--bad);text-transform:none;letter-spacing:0;font-weight:normal}
+.itemno{width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600}
+.msec{margin-bottom:8px}
+.msec-t{font-weight:600;font-size:12.5px;margin:4px 0}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:6px}
+.isum{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end;background:#faf6f1;border-radius:8px;padding:10px 12px;margin-top:12px}
+.isum span{display:block;font-size:11.5px;color:var(--muted)}
+.isum b{font-size:14px}
+tr.ext td{background:#f7f5fb}
+.osum{position:sticky;bottom:0;box-shadow:0 -6px 20px rgba(43,26,34,.08);border-color:#d9c6cf}
+.sumgrid{display:flex;gap:22px;flex-wrap:wrap}
+.sumgrid span{display:block;font-size:11.5px;color:var(--muted)}
+.sumgrid b{font-size:16px}
+.est{margin-top:12px;padding:10px 12px;border-radius:8px}
+.est.ok{background:var(--ok-soft)} .est.bad{background:var(--bad-soft)}
+.banner{padding:12px 14px;border-radius:10px;margin-bottom:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.banner.ok{background:var(--ok-soft)} .banner.info{background:var(--info-soft)} .banner.bad{background:var(--bad-soft)}
+.stepper{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin:6px 0 10px}
+.step{padding:4px 10px;border-radius:14px;font-size:12px;border:1px solid var(--line);background:#fff}
+.step.done{background:var(--ok-soft);border-color:#bfe0cb;color:var(--ok)}
+.step.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.step.ext{border-style:dashed}
+.arrow{color:#c8b9b0}
+/* gantt */
+.gantt{position:relative;font-size:12px}
+.g-row{display:flex;align-items:center;border-bottom:1px solid #f1ebe5;min-height:26px}
+.g-lab{width:250px;flex-shrink:0;padding:3px 8px 3px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.g-track{position:relative;flex:1;height:24px}
+.g-bar{position:absolute;top:5px;height:14px;border-radius:4px;background:#c9a3b4}
+.g-bar.done{background:#9ccfb0} .g-bar.prog{background:var(--accent)} .g-bar.ext{background:repeating-linear-gradient(45deg,#9fb6d1,#9fb6d1 4px,#b8cbe0 4px,#b8cbe0 8px)} .g-bar.late{outline:2px solid var(--bad)}
+.g-head{display:flex;border-bottom:1px solid var(--line)}
+.g-head .g-track{height:20px}
+.g-tick{position:absolute;top:2px;font-size:10.5px;color:var(--muted);transform:translateX(-50%);white-space:nowrap}
+.g-line{position:absolute;top:0;bottom:0;width:0;border-left:2px solid var(--info);z-index:2}
+.g-line.prom{border-left:2px dashed var(--bad)}
+.g-legend{display:flex;gap:14px;font-size:11.5px;color:var(--muted);margin-top:8px;flex-wrap:wrap}
+.g-legend i{display:inline-block;width:14px;height:9px;border-radius:2px;margin-right:4px;vertical-align:middle}
+/* board */
+.board{display:flex;gap:12px;overflow-x:auto;padding-bottom:10px;align-items:flex-start}
+.col{background:#efe8e1;border-radius:12px;min-width:240px;width:240px;padding:10px;flex-shrink:0}
+.col-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;font-weight:600}
+.col-h small{font-weight:normal;color:var(--muted)}
+.jc-card{background:#fff;border-radius:9px;padding:9px 10px;margin-bottom:8px;border:1px solid var(--line);border-left:4px solid #c9a3b4;cursor:pointer;font-size:12.5px}
+.jc-card.prog{border-left-color:var(--accent)} .jc-card.risk{border-left-color:var(--bad)} .jc-card.ext{border-left-color:var(--info)}
+.jc-card .t{font-weight:600}
+/* heat */
+.heat td{text-align:center;font-size:11px;padding:5px 2px;border:1px solid #fff}
+/* alerts */
+.alert{display:flex;gap:12px;align-items:flex-start;padding:12px;border-radius:10px;border:1px solid var(--line);background:#fff;margin-bottom:8px;border-left:5px solid #ccc}
+.alert.critical{border-left-color:#8c1d18} .alert.high{border-left-color:var(--bad)} .alert.medium{border-left-color:var(--warn)}
+.alert .b{flex:1}
+.alert .t{font-weight:600}
+/* modal */
+#modal{position:fixed;inset:0;background:rgba(30,15,22,.45);display:none;align-items:flex-start;justify-content:center;padding:30px;overflow:auto;z-index:50}
+#modal.on{display:flex}
+#ask{position:fixed;inset:0;background:rgba(30,15,22,.5);display:none;align-items:center;justify-content:center;padding:20px;z-index:70}
+#ask.on{display:flex}
+.mbox{background:#fff;border-radius:12px;max-width:900px;width:100%;padding:20px}
+.mbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+/* invoice */
+.inv{font-size:13px;color:#222}
+.inv-h{display:flex;justify-content:space-between;gap:20px;border-bottom:2px solid var(--accent);padding-bottom:12px}
+.inv-shop{font-family:Georgia,serif;font-size:24px;color:var(--accent)}
+.inv-title{font-size:18px;font-weight:700;letter-spacing:.08em;color:var(--accent)}
+.inv-to{margin:14px 0}
+.inv-t th{background:#f7eff2}
+.inv-t .bd td{border:none;padding:1px 0;font-size:11.5px;color:#666}
+.inv-foot{display:flex;gap:24px;justify-content:space-between;margin-top:14px}
+.inv-words{flex:1}
+.inv-tot{width:300px}
+.inv-tot td{padding:4px 8px}
+.inv-tot .grand td{font-weight:700;font-size:15px;border-top:2px solid #333}
+.inv-tot .bal td{font-weight:700;color:var(--accent)}
+.terms{margin-top:14px;font-size:11.5px}
+.sign{text-align:right;margin-top:30px}
+.jc{border:1px solid #ccc;border-radius:8px;padding:14px;margin-bottom:16px}
+#toasts{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;pointer-events:none;align-items:center;z-index:60;display:flex;flex-direction:column;gap:8px}
+.toast{background:#2b1a22;color:#fff;padding:10px 14px;border-radius:9px;box-shadow:0 6px 20px rgba(0,0,0,.2);max-width:360px}
+.toast.bad{background:var(--bad)} .toast.ok{background:var(--ok)}
+.empty{padding:30px;text-align:center;color:var(--muted)}
+details summary{cursor:pointer;color:var(--accent);margin:6px 0}
+/* v2 */
+.tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.dgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+.dcard{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;cursor:pointer;transition:border-color .15s}
+.dcard:hover{border-color:var(--accent)}
+.dimg{aspect-ratio:4/3;background:#f1ebe5 center/cover no-repeat;display:flex;align-items:center;justify-content:center;color:#c8b9b0;font-size:30px}
+.dcard .b{padding:10px 12px}
+.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(105px,1fr));gap:8px}
+.thumb{position:relative;aspect-ratio:1;border-radius:8px;background:#f1ebe5 center/cover no-repeat;border:1px solid var(--line);cursor:zoom-in}
+.thumb.cover{outline:3px solid var(--gold);outline-offset:1px}
+.thumb.missing::after{content:'missing';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:11px}
+.tbtn{position:absolute;top:4px;padding:0 6px;font-size:11px;line-height:20px;border-radius:6px;background:rgba(255,255,255,.92);opacity:0;transition:opacity .15s}
+.thumb:hover .tbtn{opacity:1}
+.tbtn.x{right:4px;color:var(--bad)} .tbtn.star{left:4px;color:var(--gold)}
+.spin{background:#f4eef0;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+.spin img{display:block;width:100%;height:360px;object-fit:contain;cursor:grab;user-select:none;touch-action:pan-y}
+.spin img:active{cursor:grabbing}
+.spin-ui{display:flex;gap:10px;align-items:center;padding:8px 10px;background:#fff;border-top:1px solid var(--line)}
+.spin-ui input{flex:1}
+.dbar{display:flex;gap:12px;align-items:center;background:#faf6f1;border-radius:10px;padding:8px 10px;margin-top:12px;flex-wrap:wrap}
+.dthumb{width:56px;height:56px;border-radius:8px;background:#efe7e0 center/cover no-repeat;display:flex;align-items:center;justify-content:center;color:#c8b9b0;font-size:20px;cursor:pointer;flex-shrink:0}
+.logo-box{width:140px;height:84px;border:1px dashed #d9cec5;border-radius:8px;display:flex;align-items:center;justify-content:center;background:#fff;padding:6px}
+.logo-box img{max-width:100%;max-height:100%}
+.brand img{max-height:52px;max-width:160px;display:block;margin-bottom:10px;border-radius:6px}
+.comms{display:grid;grid-template-columns:290px minmax(0,1fr);gap:16px;align-items:start}
+@media(max-width:900px){.comms{grid-template-columns:1fr}}
+.tli{padding:9px 10px;border-radius:8px;cursor:pointer}
+.tli:hover{background:#faf6f1} .tli.on{background:var(--accent-soft)}
+.ph{margin:2px;font-family:ui-monospace,Menlo,monospace;font-size:11px}
+.msg-prev{white-space:pre-wrap;background:#dcf8c6;border-radius:12px 12px 12px 3px;padding:12px 14px;max-width:480px;font-size:14px;box-shadow:0 1px 1px rgba(0,0,0,.08)}
+@media print{
+  body{background:#fff}
+  .app,.no-print,#toasts,#ask{display:none!important}
+  #modal{position:static;background:none;padding:0;display:block!important}
+  .mbox{box-shadow:none;max-width:none;width:auto;padding:0}
+  .jc{page-break-after:always;border:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="side" id="nav"></nav>
+  <main id="main"></main>
+</div>
+<div id="modal" onclick="if(event.target===this)closeModal()"><div class="mbox" id="mbox"></div></div>
+<div id="ask" onclick="if(event.target===this)this.classList.remove('on')"></div>
+<div id="toasts"></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   Boutique Order-to-Billing — POC
+   Single-file app. Data lives in the browser's localStorage.
+   Flow: Customer & measurements → style preferences → pieces & materials
+         → work plan (workers, pricing) → bandwidth-based delivery estimate
+         → production tracking & bottleneck alerts → invoice.
+   ===================================================================== */
+const STORE = 'boutique_o2b_poc_v1';
+const CPLX = {Simple:1, Medium:1.5, Heavy:2, Couture:3};
+let DB = null, SC = null, HOL = null, EDIT = null, SETUP_TPL = 0, ORD_FILTER = 'open', ORD_Q = '';
+
+/* ---------------- utilities ---------------- */
+const h = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const v = x => h(x ?? '');
+const num = x => { const n = parseFloat(x); return isNaN(n) ? 0 : n; };
+const r2 = x => Math.round(num(x) * 100) / 100;
+const inr = x => '₹' + Math.round(num(x)).toLocaleString('en-IN');
+const inr2 = x => '₹' + num(x).toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
+const uid = p => (p || '') + Date.now().toString(36).slice(-4) + Math.random().toString(36).slice(2, 7);
+const clone = o => JSON.parse(JSON.stringify(o));
+const slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+const nowISO = () => new Date().toISOString();
+function iso(d){ const x = new Date(d); return x.getFullYear() + '-' + String(x.getMonth()+1).padStart(2,'0') + '-' + String(x.getDate()).padStart(2,'0'); }
+const todayISO = () => iso(new Date());
+function parseD(s){ return new Date(String(s).length === 10 ? s + 'T00:00:00' : s); }
+function fmtD(s){ if(!s) return '—'; return parseD(s).toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'}); }
+function fmtDT(s){ if(!s) return '—'; return parseD(s).toLocaleString('en-IN', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'}); }
+function sod(d){ const x = new Date(d); x.setHours(0,0,0,0); return x; }
+function addDays(d, n){ const x = new Date(d); x.setDate(x.getDate() + n); return x; }
+const opt = (val, label, cur) => `<option value="${h(val)}" ${String(val) === String(cur ?? '') ? 'selected' : ''}>${h(label)}</option>`;
+function getPath(o, p){ return p.split('.').reduce((a, k) => a == null ? a : a[k], o); }
+function setPath(o, p, val){ const ks = p.split('.'); let x = o; for(let i = 0; i < ks.length - 1; i++) x = x[ks[i]]; x[ks[ks.length-1]] = val; }
+function toast(msg, type){ const t = document.createElement('div'); t.className = 'toast ' + (type || ''); t.textContent = msg; document.getElementById('toasts').appendChild(t); setTimeout(() => t.remove(), 4200); }
+function words(n){
+  n = Math.floor(num(n)); if(n === 0) return 'Zero';
+  const a = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
+  const b = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+  const two = x => x < 20 ? a[x] : b[Math.floor(x/10)] + (x % 10 ? ' ' + a[x % 10] : '');
+  const three = x => (x >= 100 ? a[Math.floor(x/100)] + ' Hundred' + (x % 100 ? ' ' : '') : '') + (x % 100 ? two(x % 100) : '');
+  let s = ''; const cr = Math.floor(n / 1e7); n %= 1e7; const l = Math.floor(n / 1e5); n %= 1e5; const th = Math.floor(n / 1000); n %= 1000;
+  if(cr) s += (cr >= 100 ? words(cr) : two(cr)) + ' Crore ';
+  if(l) s += two(l) + ' Lakh '; if(th) s += two(th) + ' Thousand '; if(n) s += three(n);
+  return s.trim();
+}
+function waLink(phone, text){ let d = String(phone || '').replace(/\D/g, ''); if(d.length === 10) d = '91' + d; return `https://wa.me/${d}?text=${encodeURIComponent(text)}`; }
+function openWA(phone, text){ window.open(waLink(phone, text), '_blank'); }
+
+/* ---------------- lookups ---------------- */
+const ST = () => DB.settings;
+const stage = id => DB.stages.find(s => s.id === id) || {id, name:id || '?', seq:99, type:'internal', rate:0};
+const worker = id => DB.workers.find(w => w.id === id);
+const tpl = id => DB.templates.find(t => t.id === id);
+const cust = id => DB.customers.find(c => c.id === id);
+const ord = id => DB.orders.find(o => o.id === id);
+const inv = id => DB.invoices.find(i => i.id === id);
+const openOrders = () => DB.orders.filter(o => o.status === 'open');
+const bySeq = (a, b) => num(a.seq) - num(b.seq);
+const sched = () => SC || (SC = schedule());
+
+/* ---------------- working calendar ---------------- */
+function holidays(){ return HOL || (HOL = new Set(String(ST().holidays || '').split(',').map(x => x.trim()).filter(Boolean))); }
+function isOff(d){ return (ST().weeklyOff || []).includes(new Date(d).getDay()) || holidays().has(iso(d)); }
+function day0(){ let d = sod(new Date()), g = 0; while(isOff(d) && g++ < 14) d = addDays(d, 1); return d; }
+function idxDate(n){ // working-day index -> calendar date (0 = today or next working day)
+  let d = day0(), k = Math.floor(n), g = 0;
+  if(k >= 0){ while(k > 0 && g++ < 2000){ d = addDays(d, 1); if(!isOff(d)) k--; } }
+  else { k = -k; while(k > 0 && g++ < 2000){ d = addDays(d, -1); if(!isOff(d)) k--; } }
+  return d;
+}
+function workIndex(date){ // calendar date -> working-day index relative to day0
+  const t = sod(date), z = day0(); let n = 0, d = new Date(z), g = 0;
+  if(t >= z){ while(d < t && g++ < 2000){ d = addDays(d, 1); if(!isOff(d)) n++; } return n; }
+  while(d > t && g++ < 2000){ d = addDays(d, -1); if(!isOff(d)) n--; } return n;
+}
+const startDate = x => idxDate(Math.max(0, Math.floor(x)));
+const endDate = x => idxDate(Math.max(0, Math.ceil(x) - 1));
+function addWorkDays(date, n){ let d = sod(date), k = Math.ceil(num(n)), g = 0; while(k > 0 && g++ < 2000){ d = addDays(d, 1); if(!isOff(d)) k--; } return d; }
+function elapsedHrs(startISO, cap){
+  if(!startISO) return 0; const s = new Date(startISO), n = new Date();
+  if(sod(s).getTime() === sod(n).getTime()) return Math.min(cap, Math.max(0, (n - s) / 36e5));
+  let days = 0, d = sod(s), g = 0; while(g++ < 2000){ d = addDays(d, 1); if(d > sod(n)) break; if(!isOff(d)) days++; }
+  return days * cap;
+}
+
+/* ---------------- costing ---------------- */
+function taskHours(t, it){ return num(t.hours) * (num(it.qty) || 1); }
+function taskAmount(t, it){
+  const q = num(it.qty) || 1;
+  if(t.mode === 'external') return num(t.extCost) * q;
+  if(t.pricing === 'hour') return num(t.hours) * num(t.rate) * (CPLX[t.cplx] || 1) * q;
+  if(t.pricing === 'fixed') return num(t.rate) * q;
+  return num(t.units) * num(t.rate) * q; // per piece / unit
+}
+function itemCost(it){
+  const q = num(it.qty) || 1;
+  const mat = it.components.reduce((a, c) => a + num(c.qty) * num(c.rate), 0) * q;
+  const lab = it.tasks.filter(t => t.mode !== 'external').reduce((a, t) => a + taskAmount(t, it), 0);
+  const ext = it.tasks.filter(t => t.mode === 'external').reduce((a, t) => a + taskAmount(t, it), 0);
+  return {mat: r2(mat), lab: r2(lab), ext: r2(ext), total: r2(mat + lab + ext)};
+}
+function itemPrice(it, o){ const c = itemCost(it).total; return num(it.priceOverride) > 0 ? r2(it.priceOverride) : r2(c * (1 + num(o.markup) / 100)); }
+const paidOf = o => r2((o.payments || []).reduce((a, p) => a + num(p.amount), 0));
+function orderTotals(o){
+  let cost = 0, sub = 0; o.items.forEach(it => { cost += itemCost(it).total; sub += itemPrice(it, o); });
+  const disc = r2(o.discount), taxable = Math.max(0, r2(sub - disc)), gst = r2(taxable * num(o.gstPct) / 100), total = r2(taxable + gst), paid = paidOf(o);
+  return {cost: r2(cost), sub: r2(sub), disc, taxable, gst, total, paid, bal: r2(total - paid), margin: r2(taxable - cost)};
+}
+
+/* ---------------- scheduling (bandwidth-based) ----------------
+   Time unit = working days from today (day 0). Each worker has a cursor
+   (when they become free). Tasks of an item run in stage-sequence groups;
+   tasks with the same sequence run in parallel; a group starts when the
+   previous group finishes. In-progress work is queued first; orders are
+   then taken by priority → promised date → order date.            */
+function groupTasks(it){
+  const m = new Map();
+  it.tasks.map((t, j) => ({t, j})).sort((a, b) => stage(a.t.stage).seq - stage(b.t.stage).seq || a.j - b.j)
+    .forEach(({t}) => { const k = stage(t.stage).seq; if(!m.has(k)) m.set(k, []); m.get(k).push(t); });
+  return [...m.entries()].sort((a, b) => a[0] - b[0]).map(x => x[1]);
+}
+function sortedTasks(it){ return it.tasks.map((t, j) => ({t, j})).sort((a, b) => stage(a.t.stage).seq - stage(b.t.stage).seq || a.j - b.j); }
+function remHours(t, it, w){
+  const H = taskHours(t, it); if(t.status !== 'in_progress') return H;
+  const el = elapsedHrs(t.startedAt, num(w?.hoursPerDay) || 8); return Math.max(H - el, H * 0.1, 0.25);
+}
+function pickWorker(stageId, cursor){
+  const c = DB.workers.filter(w => w.active !== false && (w.skills || []).includes(stageId));
+  if(!c.length) return null; return c.sort((a, b) => (cursor[a.id] || 0) - (cursor[b.id] || 0))[0].id;
+}
+function schedule(extra){
+  let orders = openOrders();
+  if(extra){ orders = orders.filter(o => o.id !== extra.id); orders.push(extra); }
+  const P = {urgent:0, high:1, normal:2};
+  orders = orders.slice().sort((a, b) => (P[a.priority] ?? 2) - (P[b.priority] ?? 2) || String(a.promised || '9').localeCompare(String(b.promised || '9')) || String(a.created).localeCompare(String(b.created)));
+  const cursor = {}, T = {}, O = {};
+  // pass 1 — work already on the bench occupies its worker first
+  for(const o of orders) for(const it of o.items) for(const t of it.tasks){
+    if(t.mode === 'internal' && t.status === 'in_progress'){
+      const wid = t.workerId || pickWorker(t.stage, cursor); if(!wid) continue;
+      const w = worker(wid); const s = cursor[wid] || 0; const e = s + remHours(t, it, w) / (num(w.hoursPerDay) || 8);
+      cursor[wid] = e; T[t.id] = {s: Math.min(s, workIndex(t.startedAt)), segS: s, e, wid, auto: !t.workerId};
+    }
+  }
+  // pass 2 — plan the rest
+  for(const o of orders){
+    let oEnd = 0, last = null;
+    for(const it of o.items){
+      let prev = 0;
+      for(const g of groupTasks(it)){
+        let gEnd = prev;
+        for(const t of g){
+          if(t.status === 'done'){ const e = t.doneAt ? workIndex(t.doneAt) + 0.5 : prev; T[t.id] = {s: e, e, done: true}; gEnd = Math.max(gEnd, e); continue; }
+          if(t.mode === 'external'){
+            const s = t.status === 'in_progress' ? workIndex(t.startedAt) : prev; const e = s + Math.max(0.5, num(t.tatDays) || 1);
+            T[t.id] = {s, e, ext: true}; if(e >= gEnd){ gEnd = e; } if(!last || e > last.e) last = {t, it, e}; continue;
+          }
+          if(t.status === 'in_progress' && T[t.id]){ gEnd = Math.max(gEnd, T[t.id].e); if(!last || T[t.id].e > last.e) last = {t, it, e: T[t.id].e}; continue; }
+          const wid = t.workerId || pickWorker(t.stage, cursor);
+          if(!wid){ T[t.id] = {s: prev, e: prev, none: true}; continue; }
+          const w = worker(wid); const s = Math.max(cursor[wid] || 0, prev); const e = s + remHours(t, it, w) / (num(w.hoursPerDay) || 8);
+          cursor[wid] = e; T[t.id] = {s, segS: s, e, wid, auto: !t.workerId, wait: s - prev};
+          gEnd = Math.max(gEnd, e); if(!last || e > last.e) last = {t, it, e};
+        }
+        prev = Math.max(0, gEnd);
+      }
+      oEnd = Math.max(oEnd, prev);
+    }
+    const del = iso(endDate(oEnd + num(ST().qcBufferDays)));
+    O[o.id] = {end: oEnd, delivery: del, risk: !!(o.promised && del > o.promised), last};
+  }
+  return {T, O, cursor};
+}
+
+/* ---------------- workload & stage stats ---------------- */
+function workerStats(){
+  const sc = sched(), out = {};
+  DB.workers.forEach(w => out[w.id] = {hrs: 0, tasks: [], days: sc.cursor[w.id] || 0});
+  openOrders().forEach(o => o.items.forEach(it => it.tasks.forEach(t => {
+    if(t.mode !== 'internal' || t.status === 'done') return;
+    const x = sc.T[t.id]; const wid = t.workerId || x?.wid; if(!wid || !out[wid]) return;
+    out[wid].hrs += remHours(t, it, worker(wid)); out[wid].tasks.push({o, it, t, x});
+  })));
+  Object.values(out).forEach(s => s.tasks.sort((a, b) => (a.x?.s || 0) - (b.x?.s || 0)));
+  return out;
+}
+function stageStats(){
+  const out = {}; DB.stages.forEach(s => out[s.id] = {hrs: 0, n: 0, cap: 0, out: 0, workers: 0});
+  DB.workers.filter(w => w.active !== false).forEach(w => (w.skills || []).forEach(sid => { if(out[sid]){ out[sid].cap += num(w.hoursPerDay) || 8; out[sid].workers++; } }));
+  openOrders().forEach(o => o.items.forEach(it => it.tasks.forEach(t => {
+    if(t.status === 'done' || !out[t.stage]) return; const s = out[t.stage]; s.n++;
+    if(t.mode === 'external'){ if(t.status === 'in_progress') s.out++; } else s.hrs += remHours(t, it, worker(t.workerId) || {hoursPerDay: 8});
+  })));
+  Object.values(out).forEach(s => s.days = s.cap ? s.hrs / s.cap : (s.hrs ? Infinity : 0));
+  return out;
+}
+function currentGroup(it){ return groupTasks(it).find(g => g.some(t => t.status !== 'done')) || null; }
+function progress(o){
+  let tot = 0, d = 0;
+  o.items.forEach(it => it.tasks.forEach(t => { const w = t.mode === 'external' ? Math.max(1, num(t.tatDays)) * 4 : Math.max(0.25, taskHours(t, it)); tot += w; if(t.status === 'done') d += w; else if(t.status === 'in_progress') d += w * 0.4; }));
+  return o.status !== 'open' && o.status !== 'cancelled' ? 100 : (tot ? Math.round(d / tot * 100) : 0);
+}
+const statusLabel = o => ({open:'In production', ready:'Ready for pickup', delivered:'Delivered', cancelled:'Cancelled'}[o.status] || o.status);
+const statusCls = o => ({open:'c-acc', ready:'c-ok', delivered:'c-mut', cancelled:'c-bad'}[o.status] || '');
+function curStage(o){
+  if(o.status !== 'open') return statusLabel(o);
+  const names = new Set(); o.items.forEach(it => { const g = currentGroup(it); if(g) g.filter(t => t.status !== 'done').forEach(t => names.add(stage(t.stage).name)); });
+  return names.size ? [...names].join(', ') : 'Final QC';
+}
+const prioChip = p => p === 'urgent' ? '<span class="chip c-bad">Urgent</span>' : p === 'high' ? '<span class="chip c-warn">High</span>' : '';
+function taskChip(t){ return t.status === 'done' ? '<span class="chip c-ok">Done</span>' : t.status === 'in_progress' ? `<span class="chip c-acc">${t.mode === 'external' ? 'At vendor' : 'In progress'}</span>` : '<span class="chip c-mut">Pending</span>'; }
+
+/* ---------------- bottleneck & alert engine ---------------- */
+function allAlerts(){
+  const sc = sched(), s = ST(), A = [], today = todayISO();
+  const add = (key, sev, title, detail, oid) => A.push({key, sev, title, detail, oid});
+  for(const o of openOrders()){
+    const c = cust(o.customerId) || {}; const tag = `${o.no} (${c.name || '—'})`; const est = sc.O[o.id];
+    if(o.promised && o.promised < today) add('late:' + o.id, 'critical', 'Order past promised date', `${tag} was promised for ${fmtD(o.promised)} and is still in production (${curStage(o)}).`, o.id);
+    else if(est && est.risk){ const l = est.last; add('risk:' + o.id, 'high', 'Delivery at risk', `${tag}: tentative delivery ${fmtD(est.delivery)} is after promised ${fmtD(o.promised)}.` + (l ? ` Critical step: ${stage(l.t.stage).name} – ${l.t.piece}${l.t.mode === 'internal' ? ' (' + (worker(l.t.workerId || sc.T[l.t.id]?.wid)?.name || 'unassigned') + ')' : ''}.` : ''), o.id); }
+    for(const it of o.items){
+      const groups = groupTasks(it);
+      groups.forEach((g, gi) => g.forEach(t => {
+        const lbl = `${stage(t.stage).name} – ${t.piece || it.title}`;
+        if(t.status === 'in_progress' && t.mode === 'internal'){
+          const w = worker(t.workerId); const el = elapsedHrs(t.startedAt, num(w?.hoursPerDay) || 8), H = taskHours(t, it);
+          if(H && el > H * (1 + num(s.overrunPct) / 100)) add('overrun:' + t.id, 'high', 'Task overrunning', `${lbl} for ${tag} by ${w?.name || '—'}: ~${el.toFixed(1)} h elapsed vs ${H} h estimated.`, o.id);
+        }
+        if(t.status === 'in_progress' && t.mode === 'external'){
+          const ret = iso(addWorkDays(t.startedAt, t.tatDays || 1));
+          if(ret < today) add('ext:' + t.id, 'high', 'External work overdue', `${lbl} for ${tag} at ${t.vendor || 'vendor'} was due back on ${fmtD(ret)}.`, o.id);
+        }
+        if(t.status === 'pending'){
+          if(t.mode === 'internal' && sc.T[t.id]?.none) add('noworker:' + t.id, 'critical', 'No worker with this skill', `${lbl} for ${tag} cannot be scheduled — no active worker has the "${stage(t.stage).name}" skill.`, o.id);
+          else if(t.mode === 'internal' && !t.workerId) add('unassigned:' + t.id, 'medium', 'Task not assigned', `${lbl} for ${tag} has no worker assigned (planned on ${worker(sc.T[t.id]?.wid)?.name || '—'}).`, o.id);
+          const prevDone = groups.slice(0, gi).every(pg => pg.every(x => x.status === 'done'));
+          const groupStarted = g.some(x => x.status !== 'pending');
+          if(prevDone && !groupStarted && g.indexOf(t) === 0){
+            const ds = groups.slice(0, gi).flat().map(x => x.doneAt).filter(Boolean).sort();
+            const since = ds.length ? ds[ds.length - 1] : o.created; const wait = -workIndex(since);
+            if(wait > num(s.idleDays)) add('idle:' + t.id, 'medium', 'Hand-off delay', `${g.length > 1 ? stage(t.stage).name + ' (' + g.length + ' tasks)' : lbl} for ${tag} is ready to start but has been waiting ${wait} working days${gi ? ' since the previous step finished' : ' since the order was booked'}.`, o.id);
+          }
+        }
+      }));
+    }
+  }
+  const ws = workerStats();
+  DB.workers.filter(w => w.active !== false).forEach(w => { const d = ws[w.id].days; if(d > num(s.overloadDays)) add('overload:' + w.id, 'medium', 'Worker overloaded', `${w.name} has ${d.toFixed(1)} working days of queued work (threshold ${s.overloadDays} days).`); });
+  const ss = stageStats();
+  DB.stages.filter(x => x.type === 'internal').forEach(x => { const q = ss[x.id];
+    if(q.hrs && !q.cap) add('stagecap:' + x.id, 'critical', 'Stage has no capacity', `${q.hrs.toFixed(1)} h of ${x.name} work queued but no active worker has this skill.`);
+    else if(q.days > num(s.stageQueueDays)) add('stage:' + x.id, 'high', 'Stage bottleneck', `${x.name} queue is ${q.days.toFixed(1)} working days (${q.hrs.toFixed(1)} h across ${q.workers} worker${q.workers > 1 ? 's' : ''}). Consider overtime, another worker or outsourcing.`);
+  });
+  const rank = {critical:0, high:1, medium:2};
+  return A.sort((a, b) => rank[a.sev] - rank[b.sev]);
+}
+const activeAlerts = () => allAlerts().filter(a => !DB.ack[a.key]);
+const sevChip = s => `<span class="chip ${s === 'critical' ? 'c-bad' : s === 'high' ? 'c-bad' : 'c-warn'}">${s}</span>`;
+function checkNotify(){
+  try{
+    const A = activeAlerts(); const fresh = A.filter(a => !DB.notified[a.key]);
+    if(!fresh.length) return;
+    fresh.forEach(a => DB.notified[a.key] = Date.now()); save();
+    toast(`⚠ ${fresh.length} new bottleneck alert${fresh.length > 1 ? 's' : ''} for admin — see Alerts`, 'bad');
+    if('Notification' in window && Notification.permission === 'granted') fresh.slice(0, 3).forEach(a => new Notification('Boutique alert: ' + a.title, {body: a.detail}));
+  }catch(e){ console.warn(e); }
+}
+
+/* ---------------- persistence & seed ---------------- */
+function save(){ SC = null; HOL = null; try{ localStorage.setItem(STORE, JSON.stringify(DB)); }catch(e){} }
+function load(){ try{ const x = JSON.parse(localStorage.getItem(STORE)); return x && x.settings ? x : null; }catch(e){ return null; } }
+function F(sec, list){ return list.split(',').map(l => ({k: slug(sec + '_' + l), label: l.trim(), sec})); }
+function C(rows){ return rows.map(([name, unit, qty, rate]) => ({id: uid('c'), name, unit, qty, rate})); }
+function Ti(stage, piece, pricing, units, rate, cplx, hours){ return {stage, piece, mode:'internal', pricing, units, rate, cplx: cplx || 'Simple', hours}; }
+function Xe(stage, piece, vendor, extCost, tatDays){ return {stage, piece, mode:'external', vendor, extCost, tatDays, pricing:'fixed', units:1, rate:0, cplx:'Simple', hours:0}; }
+function at(dd, hh){ const d = addDays(sod(new Date()), dd); d.setHours(hh ?? 11); return d.toISOString(); }
+
+function seed(){
+  DB = {version:2, ack:{}, notified:{}, customers:[], orders:[], invoices:[], designs:[], msgLog:[],
+    settings:{shop:'Silk & Thread Couture', tagline:'Bespoke tailoring & bridal wear', address:'Shop 12, Sector 17, Vashi, Navi Mumbai 400703', phone:'+91 98200 00000', email:'hello@silkandthread.example', gstin:'', sac:'', gstPct:5, taxMode:'intra', invPrefix:'INV-', nextInv:1, orderPrefix:'ORD-', nextOrder:1000, markupPct:35, qcBufferDays:1, weeklyOff:[0], holidays:'', unit:'inches', adminName:'Admin', adminPhone:'', adminEmail:'', overrunPct:20, overloadDays:5, stageQueueDays:3, idleDays:2, terms:'Alterations free within 7 days of delivery. Advance is non-refundable once cutting has started.'},
+    stages:[
+      {id:'dye', name:'Dyeing', seq:1, type:'external', rate:0},
+      {id:'cut', name:'Cutting', seq:2, type:'internal', rate:150},
+      {id:'emb', name:'Embroidery', seq:3, type:'internal', rate:180},
+      {id:'stitch', name:'Stitching', seq:4, type:'internal', rate:120},
+      {id:'finish', name:'Finishing (buttons, hooks, hand work)', seq:5, type:'internal', rate:100},
+      {id:'iron', name:'Ironing / Rolling', seq:6, type:'external', rate:0}],
+    workers:[
+      {id:'w_ramesh', name:'Ramesh Patil', phone:'', skills:['cut'], rate:150, hoursPerDay:8, active:true},
+      {id:'w_suresh', name:'Suresh Yadav', phone:'', skills:['stitch'], rate:120, hoursPerDay:8, active:true},
+      {id:'w_anita', name:'Anita Kamble', phone:'', skills:['stitch','finish'], rate:110, hoursPerDay:8, active:true},
+      {id:'w_farid', name:'Farid Ansari', phone:'', skills:['emb'], rate:180, hoursPerDay:8, active:true},
+      {id:'w_meena', name:'Meena Jadhav', phone:'', skills:['finish','emb'], rate:100, hoursPerDay:6, active:true}],
+    templates:[
+      {id:'t_suit', name:"Men's Suit (2-piece)",
+        fields:[...F('Jacket','Chest,Waist,Seat / Hip,Shoulder,Sleeve Length,Jacket Length,Neck,Bicep,Wrist,Back Width'), ...F('Trouser','Waist,Seat,Thigh,Knee,Bottom (Hem),Outseam Length,Inseam,Front Rise')],
+        components:C([['Suiting fabric','m',3.5,1200],['Lining','m',2,220],['Collar (canvas + under-collar felt)','pc',1,120],['Sleeves / hands (sleeve lining & cuff)','pair',1,80],['Pockets (pocketing)','pc',4,40],['Front panels – fusing / canvas','m',0.8,300],['Back panel – interlining','m',0.5,150],['Shoulder pads','pair',1,150],['Buttons (horn)','pc',8,25],['Trouser waistband curtain','pc',1,60],['Trouser zip','pc',1,35],['Thread','spool',3,40]]),
+        tasks:[Ti('cut','Whole garment','unit',1,450,'',2.5), Ti('stitch','Collar','unit',1,250,'',1.5), Ti('stitch','Sleeves / hands','unit',2,150,'',2), Ti('stitch','Pockets','unit',4,80,'',2), Ti('stitch','Front & back assembly','unit',1,900,'',6), Ti('stitch','Shoulders & padding','unit',2,80,'',1.5), Ti('stitch','Trouser – waistband & zip','unit',1,650,'',4), Ti('finish','Buttons & button-holes','unit',8,15,'',1.5), Xe('iron','Pressing & rolling','Galaxy Press Works',250,1)]},
+      {id:'t_blouse', name:'Designer Blouse',
+        fields:F('Blouse','Bust,Under Bust,Waist,Shoulder,Armhole,Sleeve Length,Sleeve Round,Front Neck Depth,Back Neck Depth,Blouse Length,Apex Point'),
+        components:C([['Blouse fabric','m',1,600],['Lining','m',1,120],['Cups / padding','pair',1,90],['Hooks','set',1,30],['Latkans','pc',2,60],['Piping / dori','m',2,25],['Thread','spool',1,40]]),
+        tasks:[Ti('cut','Whole garment','unit',1,200,'',1), Ti('emb','Neck & sleeve embroidery (aari)','hour','',180,'Medium',6), Ti('stitch','Blouse assembly','unit',1,650,'',4), Ti('finish','Hooks, latkans & finishing','unit',1,120,'',1)]},
+      {id:'t_kurta', name:'Kurta Pyjama (Men)',
+        fields:[...F('Kurta','Neck,Chest,Waist,Hip,Shoulder,Sleeve Length,Sleeve Round,Kurta Length'), ...F('Pyjama','Waist,Hip,Length,Bottom')],
+        components:C([['Kurta fabric','m',2.75,450],['Pyjama fabric','m',2.25,250],['Buttons','pc',6,12],['Drawstring','pc',1,20],['Thread','spool',2,40]]),
+        tasks:[Ti('cut','Whole garment','unit',1,300,'',1.5), Ti('emb','Neckline embroidery','hour','',180,'Simple',3), Ti('stitch','Kurta','unit',1,550,'',3.5), Ti('stitch','Pyjama','unit',1,250,'',1.5), Ti('finish','Buttons & finishing','unit',1,80,'',0.75)]},
+      {id:'t_lehenga', name:'Bridal Lehenga Choli',
+        fields:[...F('Lehenga','Waist,Hip,Length,Flare'), ...F('Choli','Bust,Waist,Shoulder,Armhole,Sleeve Length,Blouse Length,Front Neck Depth,Back Neck Depth'), ...F('Dupatta','Length,Width')],
+        components:C([['Lehenga fabric (raw silk)','m',6,900],['Can-can','m',3,150],['Lining','m',4,140],['Choli fabric','m',1,700],['Dupatta net','m',2.5,400],['Lace / border','m',10,90],['Latkans','pc',2,120],['Zip','pc',1,40],['Hooks','set',1,30],['Thread','spool',4,40]]),
+        tasks:[Xe('dye','Fabric dyeing (shade match)','Shree Dyers',900,2), Ti('cut','Lehenga, choli & dupatta','unit',1,600,'',3), Ti('emb','Lehenga zardosi work','hour','',200,'Heavy',24), Ti('emb','Choli embroidery','hour','',180,'Medium',6), Ti('stitch','Lehenga panels & can-can','unit',1,1500,'',8), Ti('stitch','Choli','unit',1,700,'',4), Ti('finish','Dupatta border & latkans','unit',1,400,'',3), Xe('iron','Steam press & rolling','Galaxy Press Works',300,1)]}
+    ]};
+  // demo customers
+  DB.customers.push(
+    {id:'c_rohan', name:'Rohan Mehta', phone:'+91 98765 43210', email:'rohan.m@example.com', address:'Palm Beach Road, Nerul, Navi Mumbai', style:'Prefers slim fit, peak lapels, minimal shoulder padding. Likes navy / charcoal tones.', measHistory:[], created:at(-40)},
+    {id:'c_priya', name:'Priya Nair', phone:'+91 99200 11223', email:'priya.nair@example.com', address:'Kharghar Sector 20, Navi Mumbai', style:'Loves deep back necks and elbow-length sleeves. Pastels with gold zari; no heavy sequins.', measHistory:[], created:at(-30)},
+    {id:'c_aarav', name:'Aarav Shah', phone:'+91 90040 55667', email:'aarav.shah@example.com', address:'Vashi Sector 9, Navi Mumbai', style:'Comfort fit, mandarin collar, subtle thread embroidery only.', measHistory:[], created:at(-60)});
+  const defW = {cut:'w_ramesh', stitch:'w_suresh', emb:'w_farid', finish:'w_anita'};
+  const mk = (cid, tplId, title, vals, style, wmap) => {
+    const it = newItem(tplId, cid); it.title = title; it.style = style;
+    tpl(tplId).fields.forEach((f, i) => it.meas[f.k] = vals[i] ?? '');
+    it.tasks.forEach((t, i) => { if(t.mode === 'internal') t.workerId = (wmap && wmap[i] !== undefined) ? wmap[i] : (defW[t.stage] || ''); });
+    return it;
+  };
+  const mkO = (cid, items, o) => {
+    const created = iso(addDays(new Date(), o.c));
+    const x = {id: uid('o'), no: ST().orderPrefix + (ST().nextOrder++), customerId: cid, created, promised: iso(addDays(new Date(), o.p)), priority: o.priority || 'normal', markup: ST().markupPct, gstPct: ST().gstPct, discount: 0, notes: o.notes || '', items, status: 'open', payments: o.adv ? [{id: uid('p'), date: created, amount: o.adv, mode: 'UPI', note: 'Advance'}] : [], log: [{at: at(o.c, 11), msg: 'Order created'}], invoiceId: null};
+    DB.orders.push(x); items.forEach(it => pushMeas(cid, it, x)); return x;
+  };
+  const kurtaVals = [15.5,40,36,40,17.5,25,13,42,34,40,40,14];
+  // ORD-1000: delivered & invoiced
+  const o0 = mkO('c_aarav', [mk('c_aarav','t_kurta','Festive kurta pyjama – ivory', kurtaVals, 'Mandarin collar, hidden placket, tone-on-tone thread work on neckline.', {})], {c:-20, p:-12, adv:2000});
+  o0.items[0].tasks.forEach((t, i) => { t.status = 'done'; t.startedAt = at(-19 + i, 10); t.doneAt = at(-19 + i, 15); });
+  o0.status = 'delivered'; o0.deliveredAt = at(-12, 17);
+  o0.log.push({at: at(-12, 17), msg: 'Delivered to customer'});
+  makeInvoice(o0, iso(addDays(new Date(), -12)));
+  o0.payments.push({id: uid('p'), date: iso(addDays(new Date(), -12)), amount: r2(orderTotals(o0).total - 2000), mode: 'Card', note: 'Balance on delivery'});
+  // ORD-1001: suit, behind schedule
+  const o1 = mkO('c_rohan', [mk('c_rohan','t_suit','Wedding reception suit – navy', [40,34,40,18,25,30,15.5,13,7,15.5,33,40,23,16,15.5,41,31,10.5], 'Slim fit, peak lapel, double vent, working cuff buttons (4). Maroon paisley lining. Minimal padding, natural shoulder. Trouser flat front, no turn-ups.', {1:'w_suresh',2:'w_suresh',3:'w_anita',4:'w_anita',5:'w_suresh',6:'w_anita',7:'w_meena'})], {c:-6, p:2, priority:'high', adv:5000, notes:'Reception on the weekend after delivery — no slippage.'});
+  const s1 = o1.items[0].tasks;
+  s1[0].status = 'done'; s1[0].startedAt = at(-5, 10); s1[0].doneAt = at(-5, 13);
+  s1[1].status = 'done'; s1[1].startedAt = at(-4, 10); s1[1].doneAt = at(-4, 12);
+  s1[2].status = 'in_progress'; s1[2].startedAt = at(-3, 10);
+  o1.log.push({at: at(-5, 13), msg: 'Cutting – Whole garment completed by Ramesh Patil'});
+  // ORD-1002: blouse + lehenga, dyeing overdue, embroidery heavy
+  const o2 = mkO('c_priya', [
+    mk('c_priya','t_blouse','Sangeet blouse – blush pink', [34,29,28,14,16,10,11,6.5,9,14.5,9.5], 'Deep U back with dori & latkans, elbow sleeves, light aari work in gold on sleeves and neckline. Padded.', {}),
+    mk('c_priya','t_lehenga','Bridal lehenga – pastel mint & gold', [28,38,41,'4 m',34,28,14,16,10,14.5,6.5,9,'2.5 m','1.1 m'], 'Pastel mint dyed to swatch. Heavy zardosi on lehenga ghera, lighter on choli. Can-can for volume. No sequins. Dupatta with scalloped gold border.', {3:'w_meena',5:'w_anita'})], {c:-5, p:14, adv:25000});
+  const b = o2.items[0].tasks, l = o2.items[1].tasks;
+  b[0].status = 'done'; b[0].startedAt = at(-2, 10); b[0].doneAt = at(-2, 11);
+  b[1].status = 'in_progress'; b[1].startedAt = new Date(Date.now() - 2 * 36e5).toISOString();
+  l[0].status = 'in_progress'; l[0].startedAt = at(-5, 12);
+  o2.log.push({at: at(-5, 12), msg: 'Dyeing – Fabric sent to Shree Dyers'});
+  // ORD-1003: kurta, newly booked, embroidery unassigned
+  mkO('c_aarav', [mk('c_aarav','t_kurta','Sherwani-style kurta – maroon', kurtaVals, 'Mandarin collar, front buttons in antique brass, contrast piping on placket, light neckline thread work.', {1:''})], {c:0, p:7, adv:1500});
+  return DB;
+}
+function pushMeas(cid, it, o){
+  const c = cust(cid); if(!c) return; c.measHistory = c.measHistory || [];
+  const rec = {itemId: it.id, tplId: it.tplId, date: o.created, orderNo: o.no, values: clone(it.meas)};
+  const k = c.measHistory.findIndex(x => x.itemId === it.id); if(k >= 0) c.measHistory[k] = rec; else c.measHistory.push(rec);
+}
+function lastMeas(cid, tplId){ const c = cust(cid); if(!c) return null; const hs = (c.measHistory || []).filter(x => x.tplId === tplId); return hs.length ? hs[hs.length - 1].values : null; }
+function newItem(tplId, cid){ const it = {id: uid('it'), tplId, title: '', qty: 1, meas: {}, style: '', components: [], tasks: [], priceOverride: ''}; applyTemplate(it, cid); return it; }
+function applyTemplate(it, cid){
+  const t = tpl(it.tplId); if(!t) return;
+  it._tpl = it.tplId; it.title = t.name; it.designId = '';
+  it.components = t.components.map(c => ({...clone(c), id: uid('c')}));
+  it.tasks = t.tasks.map(x => ({...clone(x), id: uid('t'), workerId: '', status: 'pending', startedAt: null, doneAt: null}));
+  const last = lastMeas(cid, it.tplId) || {}; const m = {}; t.fields.forEach(f => m[f.k] = last[f.k] ?? ''); it.meas = m;
+}
+function makeInvoice(o, date, existing){
+  const t = orderTotals(o);
+  const lines = o.items.map(it => {
+    const cost = itemCost(it).total, price = itemPrice(it, o), f = cost ? price / cost : 0, q = num(it.qty) || 1;
+    return {desc: it.title || tpl(it.tplId)?.name, type: (tpl(it.tplId)?.name || '') + (design(it.designId) ? ` · Design: ${design(it.designId).name} (${design(it.designId).code})` : ''), qty: q, rate: r2(price / q), amount: price,
+      details: [...it.components.map(c => ({d: `${c.name} (${c.qty} ${c.unit}${q > 1 ? ' × ' + q : ''})`, a: r2(num(c.qty) * num(c.rate) * q * f)})),
+                ...sortedTasks(it).map(({t: x}) => ({d: `${stage(x.stage).name} – ${x.piece || ''}${x.mode === 'internal' && x.pricing === 'hour' ? ` (${x.hours} h, ${x.cplx})` : ''}`, a: r2(taskAmount(x, it) * f)}))]};
+  });
+  const tax = t.gst, cg = r2(tax / 2);
+  const inv0 = {id: existing?.id || uid('i'), no: existing?.no || (ST().invPrefix + String(ST().nextInv++).padStart(4, '0')), orderId: o.id, date: date || todayISO(), lines, sub: t.sub, discount: t.disc, gstPct: num(o.gstPct), tax, cgst: cg, sgst: r2(tax - cg), total: t.total, taxMode: ST().taxMode, breakdown: existing?.breakdown || false};
+  if(existing){ Object.assign(existing, inv0); return existing; }
+  DB.invoices.push(inv0); o.invoiceId = inv0.id; o.log.push({at: date ? date + 'T12:00:00' : nowISO(), msg: `Invoice ${inv0.no} generated`}); return inv0;
+}
+
+/* ---------------- binding (inputs ↔ data) ---------------- */
+document.addEventListener('input', e => bind(e, false));
+document.addEventListener('change', e => bind(e, true));
+function bind(e, isChange){
+  const el = e.target, p = el.dataset && el.dataset.p; if(!p) return;
+  const rootName = el.dataset.root || 'EDIT', root = rootName === 'DB' ? DB : EDIT; if(!root) return;
+  if(!isChange && (el.tagName === 'SELECT' || el.type === 'checkbox')) return;
+  let val = el.type === 'checkbox' ? el.checked : el.value;
+  if(el.type === 'number') val = el.value === '' ? '' : num(el.value);
+  setPath(root, p, val); hooks(rootName, root, p, val);
+  if(rootName === 'DB') save();
+  if(isChange && el.dataset.r !== undefined) render(); else if(rootName === 'EDIT') refreshLive();
+}
+function hooks(rootName, root, p, val){
+  let m;
+  if((m = p.match(/^(.*tasks\.\d+)\.stage$/i))){
+    const t = getPath(root, m[1]), s = stage(val); t.mode = s.type;
+    if(s.type === 'external'){ t.extCost = t.extCost ?? 0; t.tatDays = t.tatDays || 1; t.vendor = t.vendor || ''; }
+    else { t.pricing = t.pricing || 'unit'; if(t.units === '' || t.units == null) t.units = 1; if(!num(t.rate) && num(s.rate)) t.rate = s.rate; if(!num(t.hours)) t.hours = 1; if(t.workerId && !(worker(t.workerId)?.skills || []).includes(val)) t.workerId = ''; }
+  }
+  if((m = p.match(/^(.*tasks\.\d+)\.workerId$/i))){ const t = getPath(root, m[1]), w = worker(val); if(w && t.pricing === 'hour') t.rate = w.rate; }
+  if((m = p.match(/^(.*tasks\.\d+)\.pricing$/i))){ const t = getPath(root, m[1]); if(val === 'hour'){ const w = worker(t.workerId); t.rate = w ? w.rate : (num(stage(t.stage).rate) || t.rate); t.cplx = t.cplx || 'Simple'; } if(val === 'unit' && (t.units === '' || t.units == null)) t.units = 1; }
+  if(rootName === 'EDIT'){
+    if((m = p.match(/^items\.(\d+)\.tplId$/))){
+      const it = EDIT.items[m[1]];
+      if(it._tpl && it._tpl !== val){ it.tplId = it._tpl; ask('Changing the apparel type reloads measurements, pieces and the work plan from the template. Continue?', () => { it.tplId = val; applyTemplate(it, EDIT.customerId); render(); }); }
+      else applyTemplate(it, EDIT.customerId);
+    }
+    if(p === 'customerId' && val && val !== '__new') EDIT.items.forEach(it => { const last = lastMeas(val, it.tplId); if(last && Object.values(it.meas).every(x => !String(x).trim())) Object.assign(it.meas, last); });
+  }
+}
+
+/* ---------------- routing & shell ---------------- */
+function route(){ const x = (location.hash || '#dashboard').slice(1), i = x.indexOf('-'); return {v: (i < 0 ? x : x.slice(0, i)) || 'dashboard', id: i < 0 ? null : x.slice(i + 1)}; }
+function go(hh){ if(location.hash === '#' + hh) render(); else location.hash = hh; }
+window.addEventListener('hashchange', () => { render(); window.scrollTo(0, 0); });
+function render(){
+  SC = null;
+  const r = route();
+  const views = {config: vConfig, design: vDesign, comms: vComms, dashboard: vDash, orders: vOrders, edit: vEdit, order: vOrder, board: vBoard, workers: vWorkers, customers: vCustomers, customer: vCustomer, alerts: vAlerts, invoices: vInvoices, setup: vSetup};
+  const nA = activeAlerts().length;
+  const items = [['dashboard','Dashboard'],['orders','Orders'],['board','Production board'],['workers','Workers & load'],['customers','Customers'],['config','Configurator'],['comms','Communication'],['alerts','Alerts', nA],['invoices','Invoices'],['setup','Setup']];
+  const cur = {edit:'orders', order:'orders', customer:'customers', design:'config'}[r.v] || r.v;
+  document.getElementById('nav').innerHTML = `<div class="brand">${ST().logo ? `<img src="${ST().logo}" alt="">` : ''}${h(ST().shop)}<small>Order → Billing · POC</small></div>` +
+    items.map(([k, l, b]) => `<a href="#${k}" class="${cur === k ? 'on' : ''}"><span>${l}</span>${b ? `<span class="badge">${b}</span>` : ''}</a>`).join('') +
+    `<div class="foot">Data is stored in this browser only${IN_FRAME ? ' — everyone who opens the link gets their own copy' : ''}. Use Setup → Export to back up.</div>`;
+  try{ document.getElementById('main').innerHTML = (views[r.v] || vDash)(r.id); }
+  catch(err){ console.error(err); document.getElementById('main').innerHTML = `<div class="card"><b>Something went wrong rendering this page.</b><pre>${h(err.stack)}</pre></div>`; }
+  if(r.v === 'edit') refreshLive();
+  if(r.v === 'comms') commsPrev();
+  hydrate(); initSpins();
+}
+const IN_FRAME = (() => { try{ return window.self !== window.top; }catch(e){ return true; } })();
+function ask(msg, yes){
+  const a = document.getElementById('ask');
+  a.innerHTML = `<div class="mbox" style="max-width:460px"><p style="margin:0 0 18px;font-size:14.5px">${h(msg)}</p><div class="row" style="justify-content:flex-end"><button id="askNo">Cancel</button><button class="pri" id="askYes">Confirm</button></div></div>`;
+  a.classList.add('on');
+  document.getElementById('askNo').onclick = () => a.classList.remove('on');
+  document.getElementById('askYes').onclick = () => { a.classList.remove('on'); yes(); };
+}
+function waA(phone, text, label, title){ return `<a class="btn sm" target="_blank" rel="noopener" title="${h(title || 'Send on WhatsApp')}" href="${h(waLink(phone, text))}">${label}</a>`; }
+function doPrint(){ if(IN_FRAME) toast('Printing is blocked inside the shared viewer. Use “Copy text”, or open the app as a local file to print / save as PDF.', 'bad'); try{ window.print(); }catch(e){} }
+function copyText(id){ const el = document.getElementById(id); const txt = el ? (el.tagName === 'TEXTAREA' ? el.value : el.innerText) : ''; const fail = () => { if(el && el.tagName === 'TEXTAREA'){ el.select(); } toast('Copy was blocked — select the text and copy it manually', 'bad'); }; try{ navigator.clipboard.writeText(txt).then(() => toast('Copied to clipboard', 'ok'), fail); }catch(e){ fail(); } }
+function showDigest(){ openModal(`<div class="mbar"><b>Alert digest</b><span class="sp"></span><button onclick="copyText('dg')">📋 Copy text</button><button onclick="closeModal()">Close</button></div><pre id="dg" style="white-space:pre-wrap;font:13px/1.5 system-ui">${h(digest())}</pre>`); }
+function openModal(html){ const m = document.getElementById('mbox'); m.innerHTML = html; document.getElementById('modal').classList.add('on'); hydrate(m); initSpins(m); }
+function closeModal(){ document.getElementById('modal').classList.remove('on'); }
+const kpi = (label, val, cls) => `<div class="kpi ${cls || ''}"><span>${label}</span><b>${val}</b></div>`;
+function loadBar(days, max){ const p = Math.min(100, days / Math.max(max, 0.01) * 100); const cls = days > num(ST().overloadDays) ? 'bad' : days > num(ST().overloadDays) * 0.7 ? 'warn' : ''; return `<div class="bar"><i class="${cls}" style="width:${p}%"></i></div>`; }
+
+/* ================= VIEWS ================= */
+function vDash(){
+  const sc = sched(), today = todayISO(), oo = openOrders(), A = activeAlerts();
+  const in7 = iso(addDays(new Date(), 7));
+  const due = oo.filter(o => o.promised && o.promised <= in7).length;
+  const risk = oo.filter(o => (o.promised && o.promised < today) || sc.O[o.id]?.risk).length;
+  const month = today.slice(0, 7);
+  const billed = DB.invoices.filter(i => String(i.date).startsWith(month)).reduce((a, i) => a + num(i.total), 0);
+  const outstanding = DB.orders.filter(o => o.status !== 'cancelled').reduce((a, o) => a + Math.max(0, orderTotals(o).bal), 0);
+  const ws = workerStats(), ss = stageStats();
+  const maxW = Math.max(num(ST().overloadDays), ...Object.values(ws).map(x => x.days));
+  const istg = DB.stages.slice().sort(bySeq);
+  const maxS = Math.max(num(ST().stageQueueDays), ...istg.map(s => isFinite(ss[s.id].days) ? ss[s.id].days : 0));
+  const upcoming = DB.orders.filter(o => o.status === 'open' || o.status === 'ready').sort((a, b) => String(a.promised).localeCompare(String(b.promised))).slice(0, 8);
+  return `<h1>Dashboard</h1><div class="sub">${new Date().toLocaleDateString('en-IN', {weekday:'long', day:'numeric', month:'long', year:'numeric'})}</div>
+  <div class="kpis">${kpi('Orders in production', oo.length)}${kpi('Due in next 7 days', due, due ? 'warn' : '')}${kpi('At risk / late', risk, risk ? 'bad' : 'ok')}${kpi('Open alerts', A.length, A.length ? 'bad' : 'ok')}${kpi('Invoiced this month', inr(billed))}${kpi('Outstanding balance', inr(outstanding))}</div>
+  <div class="grid2">
+    <div class="card"><h3>Stage queue · working days of work waiting</h3>
+      <table><thead><tr><th>Stage</th><th class="n">Tasks</th><th class="n">Hours</th><th class="n">Capacity/day</th><th>Queue</th><th class="n">Days</th></tr></thead><tbody>
+      ${istg.map(s => { const q = ss[s.id]; return s.type === 'external'
+        ? `<tr><td>${h(s.name)} <span class="chip c-info">external</span></td><td class="n">${q.n}</td><td class="n" colspan="2">${q.out} at vendor</td><td></td><td class="n">—</td></tr>`
+        : `<tr><td>${h(s.name)}</td><td class="n">${q.n}</td><td class="n">${q.hrs.toFixed(1)}</td><td class="n">${q.cap} h</td><td>${loadBar(isFinite(q.days) ? q.days : 99, maxS)}</td><td class="n">${isFinite(q.days) ? q.days.toFixed(1) : '<span class="chip c-bad">no worker</span>'}</td></tr>`; }).join('')}
+      </tbody></table></div>
+    <div class="card"><h3>Worker bandwidth · queued working days</h3>
+      <table><thead><tr><th>Worker</th><th>Skills</th><th class="n">Queued h</th><th>Load</th><th>Free from</th></tr></thead><tbody>
+      ${DB.workers.filter(w => w.active !== false).map(w => `<tr class="click" onclick="go('workers')"><td>${h(w.name)}</td><td class="muted">${(w.skills || []).map(s => h(stage(s).name.split(' ')[0])).join(', ')}</td><td class="n">${ws[w.id].hrs.toFixed(1)}</td><td>${loadBar(ws[w.id].days, maxW)}</td><td>${fmtD(iso(startDate(ws[w.id].days)))}</td></tr>`).join('')}
+      </tbody></table></div>
+  </div>
+  <div class="grid2">
+    <div class="card"><h3>Upcoming deliveries</h3>
+      ${upcoming.length ? `<table><thead><tr><th>Order</th><th>Customer</th><th>Promised</th><th>Tentative</th><th>Now at</th></tr></thead><tbody>
+      ${upcoming.map(o => { const e = sc.O[o.id]; const late = o.status === 'open' && ((o.promised && o.promised < today) || e?.risk);
+        return `<tr class="click" onclick="go('order-${o.id}')"><td><b>${h(o.no)}</b> ${prioChip(o.priority)}</td><td>${h(cust(o.customerId)?.name)}</td><td>${fmtD(o.promised)}</td><td>${o.status === 'open' ? `<span class="chip ${late ? 'c-bad' : 'c-ok'}">${fmtD(e?.delivery)}</span>` : '<span class="chip c-ok">Ready</span>'}</td><td class="muted">${h(curStage(o))}</td></tr>`; }).join('')}</tbody></table>` : '<div class="empty">No open orders</div>'}
+    </div>
+    <div class="card"><div class="row"><h3 style="margin:0">Admin alerts</h3><span class="sp"></span><a href="#alerts">View all →</a></div><div style="margin-top:10px">
+      ${A.slice(0, 5).map(a => `<div class="alert ${a.sev}"><div class="b"><div class="t">${h(a.title)} ${sevChip(a.sev)}</div><div class="muted">${h(a.detail)}</div></div></div>`).join('') || '<div class="empty">No bottlenecks detected 🎉</div>'}
+    </div></div>
+  </div>`;
+}
+
+function vOrders(){
+  return `<div class="row"><div><h1>Orders</h1><div class="sub">Every order from measurement to invoice.</div></div><span class="sp"></span><button class="pri" onclick="newOrderFor('')">+ New order</button></div>
+  <div class="card"><div class="row" style="margin-bottom:10px">
+    ${['open','ready','delivered','cancelled','all'].map(f => `<button class="sm ${ORD_FILTER === f ? 'pri' : ''}" onclick="ORD_FILTER='${f}';render()">${{open:'In production', ready:'Ready', delivered:'Delivered', cancelled:'Cancelled', all:'All'}[f]}</button>`).join('')}
+    <span class="sp"></span><input style="max-width:260px" placeholder="Search order no. or customer…" value="${v(ORD_Q)}" oninput="ORD_Q=this.value;document.getElementById('ordtbl').innerHTML=ordersTable()">
+  </div><div id="ordtbl">${ordersTable()}</div></div>`;
+}
+function ordersTable(){
+  const sc = sched(), today = todayISO(), q = ORD_Q.toLowerCase();
+  const list = DB.orders.filter(o => (ORD_FILTER === 'all' || o.status === ORD_FILTER) && (!q || o.no.toLowerCase().includes(q) || (cust(o.customerId)?.name || '').toLowerCase().includes(q))).sort((a, b) => String(b.created).localeCompare(String(a.created)) || String(b.no).localeCompare(String(a.no)));
+  if(!list.length) return '<div class="empty">No orders here.</div>';
+  return `<table><thead><tr><th>Order</th><th>Customer</th><th>Garments</th><th>Booked</th><th>Promised</th><th>Tentative delivery</th><th>Current stage</th><th>Progress</th><th class="n">Value</th><th>Status</th></tr></thead><tbody>
+  ${list.map(o => { const e = sc.O[o.id], T = orderTotals(o), late = o.status === 'open' && ((o.promised && o.promised < today) || e?.risk), pg = progress(o);
+    return `<tr class="click" onclick="go('order-${o.id}')"><td><b>${h(o.no)}</b> ${prioChip(o.priority)}</td><td>${h(cust(o.customerId)?.name)}</td><td>${o.items.map(i => h(i.title)).join('<br>')}</td><td>${fmtD(o.created)}</td><td>${fmtD(o.promised)}</td>
+    <td>${o.status === 'open' ? `<span class="chip ${late ? 'c-bad' : 'c-ok'}">${fmtD(e?.delivery)}</span>` : '—'}</td><td class="muted">${h(curStage(o))}</td><td><div class="bar" style="width:90px"><i class="${pg === 100 ? 'ok' : ''}" style="width:${pg}%"></i></div><span class="muted" style="font-size:11px">${pg}%</span></td><td class="n">${inr(T.total)}</td><td><span class="chip ${statusCls(o)}">${statusLabel(o)}</span></td></tr>`; }).join('')}
+  </tbody></table>`;
+}
+
+/* ---------- order editor ---------- */
+function newOrderDraft(cid){
+  const E = {_key: 'new', id: uid('o'), no: null, customerId: cid || '', _nc: {name: '', phone: '', email: '', address: '', style: ''}, created: todayISO(), promised: iso(addWorkDays(new Date(), 10)), priority: 'normal', markup: ST().markupPct, gstPct: ST().gstPct, discount: 0, advance: 0, advanceMode: 'UPI', notes: '', items: [], status: 'open', payments: [], log: [], invoiceId: null};
+  if(DB.templates.length) E.items.push(newItem(DB.templates[0].id, cid));
+  return E;
+}
+function newOrderFor(cid){ EDIT = newOrderDraft(cid); go('edit-new'); }
+function editOrder(id){ EDIT = clone(ord(id)); EDIT._key = id; go('edit-' + id); }
+function cancelEdit(){ const k = EDIT?._key; EDIT = null; go(k && k !== 'new' ? 'order-' + k : 'orders'); }
+function vEdit(id){
+  if(!EDIT || EDIT._key !== id){ if(id === 'new') EDIT = newOrderDraft(''); else { const o = ord(id); if(!o) return '<div class="card">Order not found.</div>'; EDIT = clone(o); EDIT._key = id; } }
+  const E = EDIT, c = cust(E.customerId);
+  return `<div class="row"><div><div class="muted"><a href="#orders">← Orders</a></div><h1>${E.no ? 'Edit order ' + h(E.no) : 'New order'}</h1><div class="sub">Measurements, client liking, pieces & materials, then the work plan. Cost and delivery date update as you type.</div></div><span class="sp"></span><button onclick="cancelEdit()">Cancel</button><button class="pri" onclick="saveEdit()">Save order</button></div>
+  <div class="grid2">
+    <div class="card"><h3>Client</h3>
+      <label>Customer</label><select data-p="customerId" data-r>${opt('', '— select customer —', E.customerId)}${DB.customers.slice().sort((a, b) => a.name.localeCompare(b.name)).map(x => opt(x.id, `${x.name} · ${x.phone || ''}`, E.customerId)).join('')}${opt('__new', '+ New customer…', E.customerId)}</select>
+      ${E.customerId === '__new' ? `<div class="row" style="margin-top:8px"><div class="f"><label>Name *</label><input data-p="_nc.name" value="${v(E._nc.name)}"></div><div class="f"><label>Phone / WhatsApp</label><input data-p="_nc.phone" value="${v(E._nc.phone)}"></div></div>
+        <div class="row"><div class="f"><label>Email</label><input data-p="_nc.email" value="${v(E._nc.email)}"></div><div class="f"><label>Address</label><input data-p="_nc.address" value="${v(E._nc.address)}"></div></div>
+        <div style="margin-top:8px"><label>General liking / style profile</label><textarea rows="2" data-p="_nc.style" placeholder="Fit, colours, fabrics they like or avoid…">${h(E._nc.style)}</textarea></div>`
+      : c ? `<div class="note"><b>${h(c.name)}</b> · ${h(c.phone)}<br><span class="muted">General liking:</span> ${h(c.style || '—')}</div>` : ''}
+    </div>
+    <div class="card"><h3>Order</h3>
+      <div class="row"><div class="f"><label>Order date</label><input type="date" data-p="created" value="${v(E.created)}"></div><div class="f"><label>Promised delivery *</label><input type="date" data-p="promised" value="${v(E.promised)}"></div><div class="f"><label>Priority</label><select data-p="priority">${opt('normal', 'Normal', E.priority)}${opt('high', 'High', E.priority)}${opt('urgent', 'Urgent', E.priority)}</select></div></div>
+      <div class="row"><div class="f s"><label>Markup %</label><input type="number" step="any" data-p="markup" value="${v(E.markup)}"></div><div class="f s"><label>GST %</label><input type="number" step="any" data-p="gstPct" value="${v(E.gstPct)}"></div><div class="f s"><label>Discount ₹</label><input type="number" step="any" data-p="discount" value="${v(E.discount)}"></div>
+      ${!E.no ? `<div class="f s"><label>Advance ₹</label><input type="number" step="any" data-p="advance" value="${v(E.advance)}"></div><div class="f s"><label>Mode</label><select data-p="advanceMode">${['UPI', 'Cash', 'Card', 'Bank transfer'].map(m => opt(m, m, E.advanceMode)).join('')}</select></div>` : ''}</div>
+      <div style="margin-top:8px"><label>Order notes</label><textarea rows="2" data-p="notes">${h(E.notes)}</textarea></div>
+    </div>
+  </div>
+  ${E.items.map((it, i) => itemEditor(it, i, c)).join('')}
+  <div class="row" style="margin-bottom:16px"><select id="addTpl" style="width:auto">${DB.templates.map(t => opt(t.id, t.name)).join('')}</select><button onclick="addItem()">+ Add garment</button></div>
+  <div class="card osum"><div class="row" style="align-items:flex-start;flex-wrap:nowrap"><div id="osum" style="flex:1"></div><button class="pri" onclick="saveEdit()">Save order</button></div></div>`;
+}
+function itemEditor(it, i, cu){
+  const t = tpl(it.tplId) || {fields: []}, secs = [...new Set(t.fields.map(f => f.sec))], P = `items.${i}`;
+  const stages = DB.stages.slice().sort(bySeq);
+  return `<div class="card"><div class="row"><div class="itemno">${i + 1}</div>
+    <div class="f"><label>Apparel type</label><select data-p="${P}.tplId" data-r>${DB.templates.map(x => opt(x.id, x.name, it.tplId)).join('')}</select></div>
+    <div class="f" style="flex:2"><label>Description (shown on invoice)</label><input data-p="${P}.title" value="${v(it.title)}"></div>
+    <div class="f s" style="flex-basis:80px;min-width:70px"><label>Qty</label><input type="number" min="1" data-p="${P}.qty" value="${v(it.qty)}"></div>
+    <button class="ghost danger" onclick="rmItem(${i})">Remove</button></div>
+    ${designBar(it, i)}
+    <div class="grid2" style="margin-top:14px">
+      <div><div class="row" style="align-items:center;margin-bottom:6px"><h3 style="margin:0">Measurements · ${h(ST().unit)}</h3><span class="sp"></span><button class="sm" onclick="loadLast(${i})">↺ Load last saved</button></div>
+        ${secs.map(s => `<div class="msec"><div class="msec-t">${h(s)}</div><div class="mgrid">${t.fields.filter(f => f.sec === s).map(f => `<div><label>${h(f.label)}</label><input data-p="${P}.meas.${f.k}" value="${v(it.meas[f.k])}"></div>`).join('')}</div></div>`).join('') || '<div class="muted">This template has no measurement fields. Add them in Setup.</div>'}
+      </div>
+      <div><h3>Client liking / style preference <span class="req">* required</span></h3>
+        <textarea rows="8" data-p="${P}.style" placeholder="e.g. Slim fit, notch lapel, two side vents, working cuff buttons, maroon contrast lining…">${h(it.style)}</textarea>
+        ${cu?.style ? `<div class="hint">Client's general liking: ${h(cu.style)}</div>` : ''}
+      </div>
+    </div>
+    <h3 style="margin-top:16px">Pieces & sub-components · materials</h3>
+    <table class="ed"><thead><tr><th>Piece / sub-component</th><th style="width:90px">Unit</th><th class="n" style="width:90px">Qty</th><th class="n" style="width:120px">Rate / unit ₹</th><th class="n" style="width:110px">Amount</th><th style="width:34px"></th></tr></thead><tbody>
+    ${it.components.map((c, j) => `<tr><td><input data-p="${P}.components.${j}.name" value="${v(c.name)}"></td><td><input data-p="${P}.components.${j}.unit" value="${v(c.unit)}"></td><td><input type="number" step="any" data-p="${P}.components.${j}.qty" value="${v(c.qty)}"></td><td><input type="number" step="any" data-p="${P}.components.${j}.rate" value="${v(c.rate)}"></td><td class="n" id="camt-${i}-${j}"></td><td><button class="sm ghost danger" title="Remove" onclick="rmRow(${i},'components',${j})">✕</button></td></tr>`).join('')}
+    </tbody></table><button class="sm" style="margin-top:6px" onclick="addComp(${i})">+ Add piece</button>
+    <h3 style="margin-top:16px">Work plan · workstreams, assignment & labour pricing</h3>
+    <div class="hint" style="margin:-4px 0 8px">Per piece = units × rate · Per hour = hours × rate × complexity (use for embroidery & hand work) · Fixed = flat price. Est. hours drive the worker schedule.</div>
+    <div style="overflow-x:auto"><table class="ed" style="min-width:1150px"><thead><tr><th style="width:150px">Stage</th><th style="min-width:190px">Piece / work</th><th style="min-width:170px">Worker / Vendor</th><th style="width:125px">Pricing</th><th class="n" style="width:70px">Units</th><th class="n" style="width:90px">Rate ₹</th><th style="width:120px">Complexity</th><th class="n" style="width:90px">Est. hrs / TAT days</th><th class="n" style="width:90px">Amount</th><th>Status</th><th style="width:34px"></th></tr></thead><tbody>
+    ${sortedTasks(it).map(({t: x, j}) => taskRow(it, i, x, j, stages)).join('')}
+    </tbody></table></div>
+    <datalist id="pl-${i}">${['Whole garment', ...it.components.map(c => c.name)].map(n => `<option value="${h(n)}">`).join('')}</datalist>
+    <div class="row" style="margin-top:6px"><button class="sm" onclick="addTask(${i})">+ Add work</button><button class="sm" onclick="addExt(${i},'iron')">+ Ironing / rolling (external)</button><button class="sm" onclick="addExt(${i},'dye')">+ Dyeing (external)</button><button class="sm" onclick="autoAssign(${i})">⚙ Auto-assign by bandwidth</button></div>
+    <div class="isum"><div id="isum-${i}" style="display:flex;gap:18px;flex-wrap:wrap"></div><div style="width:150px"><label>Override price ₹</label><input type="number" step="any" data-p="${P}.priceOverride" value="${v(it.priceOverride)}" placeholder="auto"></div></div>
+  </div>`;
+}
+function taskRow(it, i, t, j, stages){
+  const P = `items.${i}.tasks.${j}`, ext = t.mode === 'external';
+  const ws = DB.workers.filter(w => w.active !== false), sk = ws.filter(w => (w.skills || []).includes(t.stage)), ot = ws.filter(w => !(w.skills || []).includes(t.stage));
+  const wsel = `<select data-p="${P}.workerId" data-r>${opt('', '— auto / unassigned —', t.workerId)}${sk.map(w => opt(w.id, w.name, t.workerId)).join('')}${ot.length ? `<optgroup label="Other skills">${ot.map(w => opt(w.id, w.name, t.workerId)).join('')}</optgroup>` : ''}</select>`;
+  return `<tr class="${ext ? 'ext' : ''}"><td><select data-p="${P}.stage" data-r>${stages.map(s => opt(s.id, s.name + (s.type === 'external' ? ' (ext)' : ''), t.stage)).join('')}</select></td>
+    <td><input list="pl-${i}" data-p="${P}.piece" value="${v(t.piece)}"></td>
+    <td>${ext ? `<input data-p="${P}.vendor" placeholder="Vendor name" value="${v(t.vendor)}">` : wsel}</td>
+    <td>${ext ? '<span class="muted">Vendor charge</span>' : `<select data-p="${P}.pricing" data-r>${opt('unit', 'Per piece / unit', t.pricing)}${opt('hour', 'Per hour', t.pricing)}${opt('fixed', 'Fixed', t.pricing)}</select>`}</td>
+    <td>${!ext && t.pricing === 'unit' ? `<input type="number" step="any" data-p="${P}.units" value="${v(t.units)}">` : '<span class="muted">—</span>'}</td>
+    <td>${ext ? `<input type="number" step="any" data-p="${P}.extCost" value="${v(t.extCost)}">` : `<input type="number" step="any" data-p="${P}.rate" value="${v(t.rate)}">`}</td>
+    <td>${!ext && t.pricing === 'hour' ? `<select data-p="${P}.cplx">${Object.keys(CPLX).map(k => opt(k, `${k} ×${CPLX[k]}`, t.cplx)).join('')}</select>` : '<span class="muted">—</span>'}</td>
+    <td>${ext ? `<input type="number" step="any" title="Turnaround (working days)" data-p="${P}.tatDays" value="${v(t.tatDays)}">` : `<input type="number" step="any" data-p="${P}.hours" value="${v(t.hours)}">`}</td>
+    <td class="n" id="tamt-${i}-${j}"></td><td>${taskChip(t)}</td><td><button class="sm ghost danger" title="Remove" onclick="rmRow(${i},'tasks',${j})">✕</button></td></tr>`;
+}
+function refreshLive(){
+  if(route().v !== 'edit' || !EDIT) return;
+  const E = EDIT;
+  E.items.forEach((it, i) => {
+    const q = num(it.qty) || 1;
+    it.components.forEach((c, j) => { const el = document.getElementById(`camt-${i}-${j}`); if(el) el.textContent = inr(num(c.qty) * num(c.rate) * q); });
+    it.tasks.forEach((t, j) => { const el = document.getElementById(`tamt-${i}-${j}`); if(el) el.textContent = inr(taskAmount(t, it)); });
+    const el = document.getElementById('isum-' + i);
+    if(el){ const c = itemCost(it), p = itemPrice(it, E); el.innerHTML = `<div><span>Materials</span><b>${inr(c.mat)}</b></div><div><span>Labour</span><b>${inr(c.lab)}</b></div><div><span>External</span><b>${inr(c.ext)}</b></div><div><span>Input cost</span><b>${inr(c.total)}</b></div><div><span>At ${num(E.markup)}% markup</span><b>${inr(c.total * (1 + num(E.markup) / 100))}</b></div><div><span>Item price${num(it.priceOverride) > 0 ? ' (override)' : ''}</span><b class="acc">${inr(p)}</b></div>`; }
+  });
+  const os = document.getElementById('osum'); if(!os) return;
+  const T = orderTotals(E), sc = schedule(E), est = sc.O[E.id] || {}, l = est.last;
+  const unassigned = E.items.reduce((a, it) => a + it.tasks.filter(t => t.mode === 'internal' && t.status !== 'done' && !t.workerId).length, 0);
+  const none = E.items.reduce((a, it) => a + it.tasks.filter(t => sc.T[t.id]?.none).length, 0);
+  const lw = l && l.t.mode === 'internal' ? worker(l.t.workerId || sc.T[l.t.id]?.wid) : null;
+  os.innerHTML = `<div class="sumgrid"><div><span>Input cost</span><b>${inr(T.cost)}</b></div><div><span>Subtotal</span><b>${inr(T.sub)}</b></div><div><span>Discount</span><b>${inr(T.disc)}</b></div><div><span>GST ${num(E.gstPct)}%</span><b>${inr(T.gst)}</b></div><div><span>Order total</span><b class="acc">${inr(T.total)}</b></div><div><span>Gross margin</span><b>${inr(T.margin)} <small class="muted">${T.taxable ? Math.round(T.margin / T.taxable * 100) : 0}%</small></b></div></div>
+  <div class="est ${est.risk ? 'bad' : 'ok'}">📅 Tentative delivery <b>${fmtD(est.delivery)}</b> based on current worker bandwidth (incl. ${num(ST().qcBufferDays)} day QC buffer)${E.promised ? (est.risk ? ` — <b>later than promised ${fmtD(E.promised)}</b>` : ` — within promised ${fmtD(E.promised)}`) : ''}.
+    <div class="muted" style="margin-top:3px">${l ? `Last step to finish: ${h(stage(l.t.stage).name)} – ${h(l.t.piece)}${lw ? ` on ${h(lw.name)}` : l.t.mode === 'external' ? ` at ${h(l.t.vendor || 'vendor')}` : ''}, ends ${fmtD(iso(endDate(l.e)))}.` : ''} ${unassigned ? `${unassigned} task(s) auto-planned on least-loaded worker — use Auto-assign to lock them in.` : ''} ${none ? `<b class="danger">${none} task(s) have no worker with the skill.</b>` : ''}</div></div>`;
+}
+function addItem(){ EDIT.items.push(newItem(document.getElementById('addTpl').value, EDIT.customerId)); render(); }
+function rmItem(i){ ask('Remove this garment from the order?', () => { EDIT.items.splice(i, 1); render(); }); }
+function rmRow(i, key, j){ EDIT.items[i][key].splice(j, 1); render(); }
+function addComp(i){ EDIT.items[i].components.push({id: uid('c'), name: '', unit: 'pc', qty: 1, rate: 0}); render(); }
+function addTask(i){ const s = DB.stages.filter(x => x.type === 'internal').sort(bySeq)[0] || DB.stages[0]; EDIT.items[i].tasks.push({id: uid('t'), stage: s.id, piece: '', mode: s.type, pricing: 'unit', units: 1, rate: s.rate || 0, cplx: 'Simple', hours: 1, workerId: '', vendor: '', extCost: 0, tatDays: 1, status: 'pending', startedAt: null, doneAt: null}); render(); }
+function addExt(i, sid){ const s = stage(sid); if(!DB.stages.find(x => x.id === sid)) return toast('Stage not found in Setup', 'bad'); EDIT.items[i].tasks.push({id: uid('t'), stage: sid, piece: sid === 'dye' ? 'Fabric dyeing' : 'Pressing & rolling', mode: 'external', pricing: 'fixed', units: 1, rate: 0, cplx: 'Simple', hours: 0, workerId: '', vendor: '', extCost: 0, tatDays: sid === 'dye' ? 2 : 1, status: 'pending', startedAt: null, doneAt: null}); render(); toast(`${s.name} added — enter vendor, charge and turnaround`); }
+function loadLast(i){ const it = EDIT.items[i]; const last = lastMeas(EDIT.customerId, it.tplId); if(!last) return toast('No saved measurements for this client & apparel type', 'bad'); Object.assign(it.meas, last); render(); toast('Loaded last saved measurements', 'ok'); }
+function autoAssign(i){
+  const base = schedule({...EDIT, items: EDIT.items.map((it, k) => k === i ? {...it, tasks: []} : it)}).cursor;
+  const it = EDIT.items[i]; let n = 0, prev = 0;
+  for(const g of groupTasks(it)){ let gEnd = prev; for(const t of g){ if(t.mode !== 'internal' || t.status === 'done') continue; if(!t.workerId){ const w = pickWorker(t.stage, base); if(w){ t.workerId = w; n++; if(t.pricing === 'hour') t.rate = worker(w).rate; } } const w = worker(t.workerId); if(w){ const s = Math.max(base[w.id] || 0, prev); const e = s + taskHours(t, it) / (num(w.hoursPerDay) || 8); base[w.id] = e; gEnd = Math.max(gEnd, e); } } prev = gEnd; }
+  render(); toast(n ? `Assigned ${n} task(s) to the least-loaded skilled workers` : 'All tasks already assigned', 'ok');
+}
+function saveEdit(){
+  const E = EDIT; if(!E) return; const wasNew = !E.no;
+  if(E.customerId === '__new'){ if(!E._nc.name.trim()) return toast("Enter the new customer's name", 'bad'); }
+  else if(!E.customerId) return toast('Select a customer', 'bad');
+  if(!E.items.length) return toast('Add at least one garment', 'bad');
+  const miss = E.items.findIndex(it => !String(it.style || '').trim());
+  if(miss >= 0){ toast(`Garment ${miss + 1}: client liking / style preference is required`, 'bad'); const el = document.querySelector(`[data-p="items.${miss}.style"]`); if(el){ el.focus(); el.scrollIntoView({block: 'center'}); } return; }
+  if(!E.promised) return toast('Enter the promised delivery date', 'bad');
+  if(E.customerId === '__new'){ const c = {id: uid('c'), ...E._nc, measHistory: [], created: nowISO()}; DB.customers.push(c); E.customerId = c.id; }
+  if(!E.no){ E.no = ST().orderPrefix + (ST().nextOrder++); if(num(E.advance) > 0) E.payments.push({id: uid('p'), date: E.created, amount: num(E.advance), mode: E.advanceMode, note: 'Advance'}); E.log.push({at: nowISO(), msg: 'Order created'}); }
+  else E.log.push({at: nowISO(), msg: 'Order plan updated'});
+  E.items.forEach(it => pushMeas(E.customerId, it, E));
+  const o = clone(E); delete o._key; delete o._nc; delete o.advance; delete o.advanceMode;
+  const k = DB.orders.findIndex(x => x.id === o.id); if(k >= 0) DB.orders[k] = o; else DB.orders.push(o);
+  EDIT = null; save(); toast(`Order ${o.no} saved`, 'ok'); go('order-' + o.id); checkNotify(); if(wasNew) setTimeout(() => autoMsg(o.id, 'order_created'), 80);
+}
+
+/* ---------- order detail / tracking ---------- */
+function vOrder(id){
+  const o = ord(id); if(!o) return '<div class="card">Order not found.</div>';
+  const c = cust(o.customerId) || {}, sc = sched(), est = sc.O[o.id], T = orderTotals(o), today = todayISO();
+  const allDone = o.items.every(it => it.tasks.every(t => t.status === 'done')), pg = progress(o);
+  const late = o.status === 'open' && ((o.promised && o.promised < today) || est?.risk);
+  const alerts = activeAlerts().filter(a => a.oid === o.id);
+  return `<div class="row"><div><div class="muted"><a href="#orders">← Orders</a></div><h1>${h(o.no)} <span class="chip ${statusCls(o)}">${statusLabel(o)}</span> ${prioChip(o.priority)}</h1><div class="sub"><a href="#customer-${c.id}">${h(c.name)}</a> · ${h(c.phone)} · booked ${fmtD(o.created)}</div></div><span class="sp"></span>
+    <button onclick="openCompose('${o.id}')">💬 Message</button><button onclick="jobCards('${o.id}')">🖨 Job cards</button>${o.status === 'open' ? `<button onclick="editOrder('${o.id}')">✎ Edit plan</button>` : ''}<button class="pri" onclick="genInvoice('${o.id}')">${o.invoiceId ? '🧾 View invoice' : '🧾 Generate invoice'}</button></div>
+  <div class="kpis">${kpi('Promised', fmtD(o.promised))}${o.status === 'open' ? kpi('Tentative delivery', fmtD(est?.delivery), late ? 'bad' : 'ok') : kpi('Status', statusLabel(o), 'ok')}${kpi('Progress', pg + '%')}${kpi('Order total', inr(T.total))}${kpi('Paid', inr(T.paid), 'ok')}${kpi('Balance', inr(T.bal), T.bal > 0 ? 'warn' : 'ok')}</div>
+  ${alerts.map(a => `<div class="alert ${a.sev}"><div class="b"><div class="t">${h(a.title)} ${sevChip(a.sev)}</div><div class="muted">${h(a.detail)}</div></div>${/^(risk|late):/.test(a.key) ? `<button class="sm" onclick="openCompose('${o.id}','delay')">💬 Send delay notice</button>` : ''}</div>`).join('')}
+  ${o.status === 'open' && allDone ? `<div class="banner ok">✅ All work is complete. <span class="sp"></span><button class="pri" onclick="markReady('${o.id}')">Mark ready for pickup</button></div>` : ''}
+  ${o.status === 'ready' ? `<div class="banner info">📦 Ready since ${fmtDT(o.readyAt)}. <button onclick="openCompose('${o.id}','ready')">💬 Notify customer</button><span class="sp"></span><button class="pri" onclick="markDelivered('${o.id}')">Mark delivered</button><button onclick="reopenOrder('${o.id}')">Reopen</button></div>` : ''}
+  ${o.status === 'delivered' ? `<div class="banner info">Delivered on ${fmtDT(o.deliveredAt)}.<span class="sp"></span><button onclick="reopenOrder('${o.id}')">Reopen for alteration</button></div>` : ''}
+  ${o.status === 'cancelled' ? `<div class="banner bad">This order is cancelled.<span class="sp"></span><button onclick="reopenOrder('${o.id}')">Reopen</button><button class="danger" onclick="deleteOrder('${o.id}')">Delete permanently</button></div>` : ''}
+  ${o.notes ? `<div class="note" style="margin:0 0 16px">📝 ${h(o.notes)}</div>` : ''}
+  ${o.items.map(it => itemTracker(o, it)).join('')}
+  <div class="card"><h3>Timeline · planned vs actual</h3>${gantt(o)}</div>
+  <div class="grid2">
+    <div class="card"><h3>Costing</h3><table><thead><tr><th>Garment</th><th class="n">Materials</th><th class="n">Labour</th><th class="n">External</th><th class="n">Input cost</th><th class="n">Price</th></tr></thead><tbody>
+      ${o.items.map(it => { const x = itemCost(it); return `<tr><td>${h(it.title)} ×${it.qty}</td><td class="n">${inr(x.mat)}</td><td class="n">${inr(x.lab)}</td><td class="n">${inr(x.ext)}</td><td class="n">${inr(x.total)}</td><td class="n"><b>${inr(itemPrice(it, o))}</b></td></tr>`; }).join('')}
+      <tr><td colspan="4" class="right muted">Subtotal · discount ${inr(T.disc)} · GST ${o.gstPct}% ${inr(T.gst)}</td><td class="n">${inr(T.cost)}</td><td class="n"><b class="acc">${inr(T.total)}</b></td></tr></tbody></table>
+      <div class="hint">Gross margin ${inr(T.margin)} (${T.taxable ? Math.round(T.margin / T.taxable * 100) : 0}% of taxable value) at ${o.markup}% markup.</div></div>
+    <div class="card"><h3>Payments</h3><table><tbody>${(o.payments || []).map(p => `<tr><td>${fmtD(p.date)}</td><td>${h(p.mode)}</td><td class="muted">${h(p.note)}</td><td class="n">${inr2(p.amount)}</td><td><button class="sm ghost danger" onclick="rmPayment('${o.id}','${p.id}')">✕</button></td></tr>`).join('') || '<tr><td class="muted">No payments yet</td></tr>'}</tbody></table>
+      <div class="row" style="margin-top:10px"><div class="f s"><label>Amount ₹</label><input id="payAmt" type="number" step="any" value="${r2(Math.max(0, T.bal))}"></div><div class="f s"><label>Mode</label><select id="payMode">${['UPI', 'Cash', 'Card', 'Bank transfer'].map(m => opt(m, m)).join('')}</select></div><div class="f"><label>Note</label><input id="payNote" placeholder="e.g. Balance on delivery"></div><button onclick="addPayment('${o.id}')">+ Record</button></div></div>
+  </div>
+  <div class="card"><h3>Comments & activity</h3>
+    <div class="row"><div class="f" style="flex:3"><textarea id="cmt" rows="2" placeholder="Client feedback, trial notes, style changes…"></textarea></div><div class="f s"><select id="cmtItem">${opt('', 'Whole order')}${o.items.map(it => opt(it.id, it.title)).join('')}</select><label class="inline" style="margin-top:6px"><input type="checkbox" id="cmtStyle"> also append to style pref.</label></div><button onclick="addComment('${o.id}')">Add</button></div>
+    <table style="margin-top:10px"><tbody>${(o.log || []).slice().reverse().map(l => `<tr><td style="width:150px" class="muted">${fmtDT(l.at)}</td><td>${l.kind === 'comment' ? '💬 ' : ''}${h(l.msg)}</td></tr>`).join('')}</tbody></table>
+    ${o.status === 'open' ? `<div class="row" style="margin-top:12px"><span class="sp"></span><button class="sm ghost danger" onclick="cancelOrder('${o.id}')">Cancel order</button></div>` : ''}
+  </div>`;
+}
+function itemTracker(o, it){
+  const sc = sched(), groups = groupTasks(it), cg = currentGroup(it), t0 = tpl(it.tplId) || {fields: []};
+  const steps = []; const seen = new Set();
+  sortedTasks(it).forEach(({t}) => { if(seen.has(t.stage)) return; seen.add(t.stage); const ts = it.tasks.filter(x => x.stage === t.stage); const done = ts.every(x => x.status === 'done'); const act = !done && (ts.some(x => x.status === 'in_progress') || (cg && cg.some(x => x.stage === t.stage))); steps.push(`<span class="step ${done ? 'done' : act ? 'active' : ''} ${stage(t.stage).type === 'external' ? 'ext' : ''}">${done ? '✓ ' : ''}${h(stage(t.stage).name)}</span>`); });
+  steps.push(`<span class="step ${!cg ? 'done' : ''}">${!cg ? '✓ ' : ''}QC & ready</span>`);
+  return `<div class="card"><div class="row" style="align-items:center"><div class="itemno">${o.items.indexOf(it) + 1}</div><div><b style="font-size:15px">${h(it.title)}</b> <span class="muted">× ${it.qty} · ${h(t0.name || '')}</span></div></div>
+  <div class="stepper">${steps.join('<span class="arrow">›</span>')}</div>
+  ${trackDesign(it)}<div class="style-note"><b>Client liking:</b> ${h(it.style)}</div>
+  <details><summary>Measurements (${h(ST().unit)})</summary><div class="mgrid" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr))">${t0.fields.map(f => `<div><span class="muted">${h(f.sec)} · ${h(f.label)}:</span> <b>${h(it.meas[f.k] || '—')}</b></div>`).join('')}</div></details>
+  <table style="margin-top:8px"><thead><tr><th>Stage</th><th>Piece / work</th><th>Worker / Vendor</th><th class="n">Effort</th><th>Planned</th><th>Actual</th><th>Status</th><th></th></tr></thead><tbody>
+  ${sortedTasks(it).map(({t}) => trackRow(o, it, t)).join('')}
+  </tbody></table></div>`;
+}
+function trackRow(o, it, t){
+  const x = sched().T[t.id] || {}, ext = t.mode === 'external', open = o.status === 'open';
+  let who;
+  if(ext) who = `🚚 ${h(t.vendor || 'Vendor')}`;
+  else if(t.status === 'pending' && open){ const ws = DB.workers.filter(w => w.active !== false); who = `<select style="min-width:140px" onchange="assignWorker('${o.id}','${t.id}',this.value)">${opt('', x.wid ? `auto → ${worker(x.wid)?.name}` : '— unassigned —', t.workerId)}${ws.filter(w => (w.skills || []).includes(t.stage)).map(w => opt(w.id, w.name, t.workerId)).join('')}<optgroup label="Other skills">${ws.filter(w => !(w.skills || []).includes(t.stage)).map(w => opt(w.id, w.name, t.workerId)).join('')}</optgroup></select>`; }
+  else who = h(worker(t.workerId)?.name || '—');
+  let effort = ext ? `${t.tatDays} d TAT` : `${taskHours(t, it)} h`;
+  if(t.status === 'in_progress' && !ext){ const el = elapsedHrs(t.startedAt, num(worker(t.workerId)?.hoursPerDay) || 8); const over = el > taskHours(t, it) * (1 + num(ST().overrunPct) / 100); effort += `<div class="${over ? 'danger' : 'muted'}" style="font-size:11px">~${el.toFixed(1)} h elapsed</div>`; }
+  let planned = '—';
+  if(t.status !== 'done' && open){
+    if(x.none) planned = '<span class="chip c-bad">No skilled worker</span>';
+    else if(ext && t.status === 'in_progress'){ const ret = iso(addWorkDays(t.startedAt, t.tatDays || 1)); planned = `due back <span class="chip ${ret < todayISO() ? 'c-bad' : 'c-info'}">${fmtD(ret)}</span>`; }
+    else planned = `${fmtD(iso(startDate(x.s)))} → ${fmtD(iso(endDate(x.e)))}`;
+  }
+  const actual = t.startedAt ? `${fmtDT(t.startedAt)}${t.doneAt ? '<br>→ ' + fmtDT(t.doneAt) : ''}` : '—';
+  let act = '';
+  if(open){
+    if(t.status === 'pending') act = `<button class="sm" onclick="taskAct('${o.id}','${t.id}','start')">${ext ? 'Send out' : '▶ Start'}</button> <button class="sm ghost" title="Mark done directly" onclick="taskAct('${o.id}','${t.id}','done')">✓</button>`;
+    else if(t.status === 'in_progress') act = `<button class="sm pri" onclick="taskAct('${o.id}','${t.id}','done')">${ext ? 'Received' : '✓ Done'}</button> <button class="sm ghost" title="Undo" onclick="taskAct('${o.id}','${t.id}','undo')">↶</button>`;
+    else act = `<button class="sm ghost" title="Undo" onclick="taskAct('${o.id}','${t.id}','undo')">↶</button>`;
+  }
+  return `<tr><td>${h(stage(t.stage).name)}</td><td>${h(t.piece)}</td><td>${who}</td><td class="n">${effort}</td><td>${planned}</td><td style="font-size:12px">${actual}</td><td>${taskChip(t)}</td><td style="white-space:nowrap">${act}</td></tr>`;
+}
+function gantt(o){
+  const sc = sched(), rows = []; let lo = 0, hi = 1;
+  o.items.forEach(it => sortedTasks(it).forEach(({t}) => {
+    const x = sc.T[t.id] || {}; let s, e, cls;
+    if(t.status === 'done'){ s = t.startedAt ? workIndex(t.startedAt) : (x.e || 0) - 0.5; e = Math.max(s + 0.3, (t.doneAt ? workIndex(t.doneAt) : s) + 1); cls = 'done'; }
+    else if(o.status !== 'open' || x.none || x.s == null) return;
+    else { s = x.s; e = Math.max(x.e, x.s + 0.15); cls = t.status === 'in_progress' && t.mode === 'internal' ? 'prog' : t.mode === 'external' ? 'ext' : 'plan'; }
+    if(t.mode === 'external' && t.status === 'in_progress' && iso(addWorkDays(t.startedAt, t.tatDays || 1)) < todayISO()) cls += ' late';
+    const who = t.mode === 'external' ? (t.vendor || 'vendor') : (worker(t.workerId || x.wid)?.name || '');
+    rows.push({lab: `${stage(t.stage).name} · ${t.piece}`, sub: `${it.title} · ${who}`, s, e, cls});
+    lo = Math.min(lo, Math.floor(s)); hi = Math.max(hi, Math.ceil(e));
+  }));
+  if(!rows.length) return '<div class="muted">Nothing to plot.</div>';
+  const pi = o.promised ? workIndex(o.promised) + 1 : null; if(pi != null) hi = Math.max(hi, pi);
+  const di = o.status === 'open' && sc.O[o.id] ? workIndex(sc.O[o.id].delivery) + 1 : null; if(di != null) hi = Math.max(hi, di);
+  lo = Math.max(lo, -40); hi = Math.min(hi, lo + 80);
+  const span = hi - lo, pos = x => ((x - lo) / span * 100).toFixed(2) + '%', step = Math.max(1, Math.ceil(span / 18));
+  let ticks = ''; for(let d = lo; d < hi; d += step) ticks += `<span class="g-tick" style="left:${pos(d + 0.5)}">${idxDate(d).toLocaleDateString('en-IN', {day: 'numeric', month: 'short'})}</span>`;
+  const lines = `<div class="g-line" style="left:${pos(0)}" title="Today"></div>${pi != null ? `<div class="g-line prom" style="left:${pos(pi)}" title="Promised"></div>` : ''}`;
+  return `<div class="gantt"><div class="g-head"><div class="g-lab muted">Task</div><div class="g-track">${ticks}</div></div>
+  ${rows.map(r => `<div class="g-row"><div class="g-lab" title="${h(r.sub)}">${h(r.lab)}<div class="muted" style="font-size:10.5px">${h(r.sub)}</div></div><div class="g-track">${lines}<div class="g-bar ${r.cls}" style="left:${pos(Math.max(lo, r.s))};width:calc(${((Math.min(hi, r.e) - Math.max(lo, r.s)) / span * 100).toFixed(2)}% - 1px)"></div></div></div>`).join('')}
+  </div><div class="g-legend"><span><i style="background:#9ccfb0"></i>Done</span><span><i style="background:var(--accent)"></i>In progress</span><span><i style="background:#c9a3b4"></i>Planned</span><span><i style="background:#9fb6d1"></i>External</span><span><i style="border-left:2px solid var(--info);width:2px"></i>Today</span><span><i style="border-left:2px dashed var(--bad);width:2px"></i>Promised</span></div>`;
+}
+function findTask(o, tid){ for(const it of o.items){ const t = it.tasks.find(x => x.id === tid); if(t) return {it, t}; } return {}; }
+function taskAct(oid, tid, act, force){
+  const o = ord(oid), {it, t} = findTask(o, tid); if(!t) return;
+  const lbl = `${stage(t.stage).name} – ${t.piece}`, wn = worker(t.workerId)?.name;
+  if(act === 'start'){
+    if(t.mode === 'internal' && !t.workerId){ const sug = sched().T[t.id]?.wid; if(!sug) return toast('Assign a worker first', 'bad'); return ask(`This task has no worker yet. Assign it to ${worker(sug).name} and start?`, () => { t.workerId = sug; taskAct(oid, tid, 'start', force); }); }
+    const g = groupTasks(it), gi = g.findIndex(x => x.includes(t));
+    if(gi > 0 && !g.slice(0, gi).every(x => x.every(y => y.status === 'done')) && !force) return ask('Earlier steps for this garment are not finished yet. Start anyway?', () => taskAct(oid, tid, 'start', true));
+    t.status = 'in_progress'; t.startedAt = nowISO();
+    o.log.push({at: nowISO(), msg: t.mode === 'external' ? `${lbl} sent to ${t.vendor || 'vendor'} (due back in ${t.tatDays} working days)` : `${lbl} started by ${worker(t.workerId)?.name}`});
+  } else if(act === 'done'){
+    if(t.mode === 'internal' && !t.workerId){ const sug = sched().T[t.id]?.wid; if(sug) t.workerId = sug; }
+    t.startedAt = t.startedAt || nowISO(); t.status = 'done'; t.doneAt = nowISO();
+    o.log.push({at: nowISO(), msg: t.mode === 'external' ? `${lbl} received from ${t.vendor || 'vendor'}` : `${lbl} completed by ${worker(t.workerId)?.name || wn || '—'}`});
+    if(o.items.every(x => x.tasks.every(y => y.status === 'done'))) toast('All work done — mark the order ready for pickup', 'ok');
+  } else if(act === 'undo'){
+    if(t.status === 'done'){ t.status = t.startedAt ? 'in_progress' : 'pending'; t.doneAt = null; } else { t.status = 'pending'; t.startedAt = null; }
+    o.log.push({at: nowISO(), msg: `${lbl} status reverted`});
+  }
+  save(); render(); checkNotify();
+}
+function assignWorker(oid, tid, wid){ const o = ord(oid), {t} = findTask(o, tid); t.workerId = wid; if(wid && t.pricing === 'hour') t.rate = worker(wid).rate; o.log.push({at: nowISO(), msg: `${stage(t.stage).name} – ${t.piece} assigned to ${worker(wid)?.name || 'auto'}`}); save(); render(); checkNotify(); }
+function markReady(oid){ const o = ord(oid); o.status = 'ready'; o.readyAt = nowISO(); o.log.push({at: nowISO(), msg: 'Quality checked — ready for pickup'}); save(); render(); autoMsg(oid, 'ready'); }
+function markDelivered(oid){ const o = ord(oid); o.status = 'delivered'; o.deliveredAt = nowISO(); o.log.push({at: nowISO(), msg: 'Delivered to customer'}); save(); render(); if(!o.invoiceId) ask('Order delivered. Generate the invoice now?', () => genInvoice(oid)); else autoMsg(oid, 'delivered'); }
+function reopenOrder(oid){ const o = ord(oid); o.status = 'open'; o.log.push({at: nowISO(), msg: 'Order reopened'}); save(); render(); }
+function cancelOrder(oid){ ask('Cancel this order? Its tasks will leave the production queue.', () => { const o = ord(oid); o.status = 'cancelled'; o.log.push({at: nowISO(), msg: 'Order cancelled'}); save(); render(); }); }
+function deleteOrder(oid){ ask('Delete this order and its invoice permanently? This cannot be undone.', () => { const o = ord(oid); DB.invoices = DB.invoices.filter(i => i.orderId !== oid); DB.orders = DB.orders.filter(x => x.id !== oid); DB.customers.forEach(c => c.measHistory = (c.measHistory || []).filter(m => m.orderNo !== o.no)); save(); go('orders'); }); }
+function addPayment(oid){ const a = num(document.getElementById('payAmt').value); if(a <= 0) return toast('Enter an amount', 'bad'); const o = ord(oid); o.payments.push({id: uid('p'), date: todayISO(), amount: a, mode: document.getElementById('payMode').value, note: document.getElementById('payNote').value}); o.log.push({at: nowISO(), msg: `Payment received ${inr2(a)}`}); save(); render(); toast('Payment recorded', 'ok'); }
+function rmPayment(oid, pid){ ask('Remove this payment?', () => { const o = ord(oid); o.payments = o.payments.filter(p => p.id !== pid); save(); render(); }); }
+function addComment(oid){
+  const txt = document.getElementById('cmt').value.trim(); if(!txt) return;
+  const o = ord(oid), iid = document.getElementById('cmtItem').value, it = o.items.find(x => x.id === iid);
+  o.log.push({at: nowISO(), kind: 'comment', msg: (it ? `[${it.title}] ` : '') + txt});
+  if(it && document.getElementById('cmtStyle').checked) it.style = (it.style ? it.style + '\n' : '') + `(${fmtD(todayISO())}) ${txt}`;
+  save(); render();
+}
+function jobCards(oid){
+  const o = ord(oid), c = cust(o.customerId) || {}, sc = sched();
+  openModal(`<div class="mbar no-print"><b>Job cards · ${h(o.no)}</b><span class="sp"></span><button onclick="doPrint()">🖨 Print</button><button onclick="closeModal()">Close</button></div>
+  ${o.items.map(it => { const t0 = tpl(it.tplId) || {fields: []}; return `<div class="jc"><div class="row"><div>${ST().logo ? `<img src="${ST().logo}" alt="" style="max-height:40px;display:block">` : ''}<div class="inv-shop" style="font-size:18px">${h(ST().shop)}</div><b>JOB CARD · ${h(o.no)}</b> — ${h(it.title)} × ${it.qty}</div><span class="sp"></span><div class="right">Client: <b>${h(c.name)}</b><br>Promised: <b>${fmtD(o.promised)}</b> ${o.priority !== 'normal' ? '· ' + o.priority.toUpperCase() : ''}</div></div>
+    <div class="style-note"><b>Client liking / style:</b> ${h(it.style)}</div>${jcDesign(it)}
+    <h3>Measurements (${h(ST().unit)})</h3><table><tbody>${[...new Set(t0.fields.map(f => f.sec))].map(s => `<tr><td style="width:90px"><b>${h(s)}</b></td><td>${t0.fields.filter(f => f.sec === s).map(f => `${h(f.label)}: <b>${h(it.meas[f.k] || '—')}</b>`).join(' &nbsp;·&nbsp; ')}</td></tr>`).join('')}</tbody></table>
+    <h3 style="margin-top:12px">Pieces & sub-components</h3><div>${it.components.map(x => `${h(x.name)} — ${x.qty} ${h(x.unit)}`).join(' · ')}</div>
+    <h3 style="margin-top:12px">Work plan</h3><table><thead><tr><th>Stage</th><th>Piece</th><th>Worker / Vendor</th><th class="n">Hrs / TAT</th><th>Planned finish</th><th>Sign-off</th></tr></thead><tbody>${sortedTasks(it).map(({t}) => `<tr><td>${h(stage(t.stage).name)}</td><td>${h(t.piece)}</td><td>${t.mode === 'external' ? h(t.vendor) : h(worker(t.workerId || sc.T[t.id]?.wid)?.name || '')}</td><td class="n">${t.mode === 'external' ? t.tatDays + ' d' : taskHours(t, it) + ' h'}</td><td>${t.status === 'done' ? 'Done' : sc.T[t.id] && !sc.T[t.id].none ? fmtD(iso(endDate(sc.T[t.id].e))) : '—'}</td><td style="width:110px;border-bottom:1px solid #999"></td></tr>`).join('')}</tbody></table></div>`; }).join('')}`);
+}
+
+/* ---------- invoices ---------- */
+function genInvoice(oid){ const o = ord(oid); if(o.invoiceId && inv(o.invoiceId)) return viewInvoice(o.invoiceId); const i = makeInvoice(o); save(); render(); viewInvoice(i.id); toast(`Invoice ${i.no} generated`, 'ok'); }
+function regenInvoice(iid){ const i = inv(iid), o = ord(i.orderId); ask('Rebuild this invoice from the current order (same number, today\'s date)?', () => { makeInvoice(o, todayISO(), i); o.log.push({at: nowISO(), msg: `Invoice ${i.no} regenerated`}); save(); render(); viewInvoice(iid); }); }
+function toggleBD(iid, on){ inv(iid).breakdown = on; save(); viewInvoice(iid); }
+function viewInvoice(iid){
+  const i = inv(iid); if(!i) return;
+  openModal(`<div class="mbar no-print"><b>Invoice ${h(i.no)}</b><span class="sp"></span><label class="inline"><input type="checkbox" ${i.breakdown ? 'checked' : ''} onchange="toggleBD('${i.id}',this.checked)"> Piece-wise breakdown</label><button onclick="regenInvoice('${i.id}')">↻ Regenerate</button><button onclick="openCompose('${i.orderId}','invoice')">💬 Send</button><button onclick="copyText('invArea')">📋 Copy text</button><button onclick="doPrint()">🖨 Print / Save PDF</button><button onclick="closeModal()">Close</button></div><div id="invArea">${invoiceHTML(i)}</div>`);
+}
+function invoiceHTML(i){
+  const o = ord(i.orderId) || {payments: []}, c = cust(o.customerId) || {}, s = ST(), paid = paidOf(o), bal = r2(i.total - paid);
+  return `<div class="inv"><div class="inv-h"><div>${s.logo ? `<img src="${s.logo}" alt="" style="max-height:64px;max-width:200px;display:block;margin-bottom:6px">` : ''}<div class="inv-shop">${h(s.shop)}</div><div class="muted">${h(s.tagline)}</div><div>${h(s.address)}</div><div>📞 ${h(s.phone)}${s.landline ? ' / ' + h(s.landline) : ''}${s.email ? ' · ' + h(s.email) : ''}</div>${s.website ? `<div>${h(s.website)}</div>` : ''}${s.gstin ? `<div>GSTIN: <b>${h(s.gstin)}</b>${s.pan ? ' · PAN: ' + h(s.pan) : ''}</div>` : ''}</div>
+    <div class="right"><div class="inv-title">${s.gstin ? 'TAX INVOICE' : 'INVOICE'}</div><div>No. <b>${h(i.no)}</b></div><div>Date: ${fmtD(i.date)}</div><div>Order: ${h(o.no)}</div><div>Order date: ${fmtD(o.created)}</div></div></div>
+  <div class="inv-to"><div class="muted">Bill to</div><b>${h(c.name)}</b><div>${h(c.address)}</div><div>${h(c.phone)}${c.email ? ' · ' + h(c.email) : ''}</div></div>
+  <table class="inv-t"><thead><tr><th>#</th><th>Description</th>${s.sac ? '<th>SAC/HSN</th>' : ''}<th class="n">Qty</th><th class="n">Rate</th><th class="n">Amount</th></tr></thead><tbody>
+  ${i.lines.map((l, k) => `<tr><td style="vertical-align:top">${k + 1}</td><td><b>${h(l.desc)}</b><div class="muted">${h(l.type)} — custom tailored, incl. materials & workmanship</div>${i.breakdown ? `<table class="bd">${l.details.filter(d => d.a).map(d => `<tr><td>${h(d.d)}</td><td class="n">${inr2(d.a)}</td></tr>`).join('')}</table>` : ''}</td>${s.sac ? `<td>${h(s.sac)}</td>` : ''}<td class="n" style="vertical-align:top">${l.qty}</td><td class="n" style="vertical-align:top">${inr2(l.rate)}</td><td class="n" style="vertical-align:top">${inr2(l.amount)}</td></tr>`).join('')}
+  </tbody></table>
+  <div class="inv-foot"><div class="inv-words"><div class="muted">Amount in words</div><b>Rupees ${words(i.total)}${Math.round((i.total % 1) * 100) ? ' and ' + words(Math.round((i.total % 1) * 100)) + ' Paise' : ''} Only</b>${s.upiId || s.bank ? `<div class="terms"><div class="muted">Payment details</div>${s.upiId ? `UPI: <b>${h(s.upiId)}</b><br>` : ''}${h(s.bank).replace(/\n/g, '<br>')}</div>` : ''}<div class="terms"><div class="muted">Terms</div>${h(s.terms)}</div></div>
+  <table class="inv-tot"><tr><td>Subtotal</td><td class="n">${inr2(i.sub)}</td></tr>${i.discount ? `<tr><td>Discount</td><td class="n">− ${inr2(i.discount)}</td></tr>` : ''}<tr><td>Taxable value</td><td class="n">${inr2(i.sub - i.discount)}</td></tr>
+  ${i.taxMode === 'inter' ? `<tr><td>IGST @ ${i.gstPct}%</td><td class="n">${inr2(i.tax)}</td></tr>` : `<tr><td>CGST @ ${i.gstPct / 2}%</td><td class="n">${inr2(i.cgst)}</td></tr><tr><td>SGST @ ${i.gstPct / 2}%</td><td class="n">${inr2(i.sgst)}</td></tr>`}
+  <tr class="grand"><td>Total</td><td class="n">${inr2(i.total)}</td></tr><tr><td>Paid</td><td class="n">${inr2(paid)}</td></tr><tr class="bal"><td>Balance due</td><td class="n">${inr2(Math.max(0, bal))}</td></tr></table></div>
+  <div class="sign">For ${h(s.shop)}<br><br><br>Authorised signatory</div></div>`;
+}
+function vInvoices(){
+  const list = DB.invoices.slice().sort((a, b) => String(b.date).localeCompare(String(a.date)));
+  return `<h1>Invoices</h1><div class="sub">Generated from orders. Open one to print or save as PDF.</div><div class="card">
+  ${list.length ? `<table><thead><tr><th>Invoice</th><th>Date</th><th>Order</th><th>Customer</th><th class="n">Total</th><th class="n">Paid</th><th class="n">Balance</th><th>Status</th></tr></thead><tbody>
+  ${list.map(i => { const o = ord(i.orderId) || {payments: []}, p = paidOf(o), b = r2(i.total - p); return `<tr class="click" onclick="viewInvoice('${i.id}')"><td><b>${h(i.no)}</b></td><td>${fmtD(i.date)}</td><td>${h(o.no)}</td><td>${h(cust(o.customerId)?.name)}</td><td class="n">${inr2(i.total)}</td><td class="n">${inr2(p)}</td><td class="n">${inr2(Math.max(0, b))}</td><td><span class="chip ${b <= 0.5 ? 'c-ok' : p > 0 ? 'c-warn' : 'c-bad'}">${b <= 0.5 ? 'Paid' : p > 0 ? 'Part-paid' : 'Unpaid'}</span></td></tr>`; }).join('')}</tbody></table>` : '<div class="empty">No invoices yet. Open an order and click “Generate invoice”.</div>'}</div>`;
+}
+
+/* ---------- production board ---------- */
+function vBoard(){
+  const sc = sched(), today = todayISO(), cols = {}, ready = [];
+  DB.stages.forEach(s => cols[s.id] = []);
+  openOrders().forEach(o => { const risk = (o.promised && o.promised < today) || sc.O[o.id]?.risk; o.items.forEach(it => { const g = currentGroup(it); if(!g) ready.push({o, it, risk}); else g.filter(t => t.status !== 'done').forEach(t => { if(cols[t.stage]) cols[t.stage].push({o, it, t, risk}); }); }); });
+  const card = ({o, it, t, risk}) => { const x = t ? sc.T[t.id] || {} : {}; const ext = t && t.mode === 'external';
+    return `<div class="jc-card ${risk ? 'risk' : t?.status === 'in_progress' ? 'prog' : ext ? 'ext' : ''}" onclick="go('order-${o.id}')"><div class="row" style="gap:6px"><span class="t">${h(o.no)}</span>${prioChip(o.priority)}<span class="sp"></span>${t ? taskChip(t) : ''}</div>
+    <div>${h(cust(o.customerId)?.name)} · ${h(it.title)}</div>${t ? `<div class="muted">${h(t.piece)} · ${ext ? '🚚 ' + h(t.vendor || 'vendor') : h(worker(t.workerId || x.wid)?.name || 'unassigned')}${!t.workerId && !ext ? ' (auto)' : ''}</div>` : ''}
+    <div class="muted" style="font-size:11.5px;margin-top:3px">Promised ${fmtD(o.promised)}${t && !x.none && x.e != null ? ` · step ends ${fmtD(iso(endDate(x.e)))}` : ''}</div>
+    ${t ? `<div style="margin-top:6px" onclick="event.stopPropagation()">${t.status === 'pending' ? `<button class="sm" onclick="taskAct('${o.id}','${t.id}','start')">${ext ? 'Send out' : '▶ Start'}</button>` : `<button class="sm pri" onclick="taskAct('${o.id}','${t.id}','done')">${ext ? 'Received' : '✓ Done'}</button>`}</div>` : `<div style="margin-top:6px" onclick="event.stopPropagation()"><button class="sm pri" onclick="markReady('${o.id}')">Mark order ready</button></div>`}</div>`; };
+  const ss = stageStats();
+  return `<h1>Production board</h1><div class="sub">Each garment sits in the stage it is currently in. Red edge = order at risk of missing its promised date.</div>
+  <div class="board">${DB.stages.slice().sort(bySeq).map(s => `<div class="col"><div class="col-h">${h(s.name)} <small>${cols[s.id].length} · ${s.type === 'external' ? 'external' : ss[s.id].hrs.toFixed(0) + ' h queued'}</small></div>${cols[s.id].map(card).join('') || '<div class="muted" style="font-size:12px">—</div>'}</div>`).join('')}
+  <div class="col"><div class="col-h">QC & ready <small>${ready.length}</small></div>${ready.map(card).join('') || '<div class="muted" style="font-size:12px">—</div>'}</div></div>`;
+}
+
+/* ---------- workers & workload ---------- */
+function vWorkers(){
+  const ws = workerStats(), N = 12, act = DB.workers.filter(w => w.active !== false);
+  const maxW = Math.max(num(ST().overloadDays), ...Object.values(ws).map(x => x.days));
+  const heat = act.map(w => { const cells = Array(N).fill(0); ws[w.id].tasks.forEach(({x}) => { if(!x || x.none) return; const s = Math.max(0, x.segS ?? x.s), e = x.e; for(let d = Math.floor(s); d < Math.min(N, Math.ceil(e)); d++) cells[d] += Math.max(0, Math.min(e, d + 1) - Math.max(s, d)); }); return {w, cells}; });
+  return `<div class="row"><div><h1>Workers & workload</h1><div class="sub">Bandwidth is computed from estimated hours of every open task, each worker's daily capacity and the working calendar.</div></div><span class="sp"></span><a class="btn" href="#setup">Manage workers →</a></div>
+  <div class="card"><table><thead><tr><th>Worker</th><th>Skills</th><th class="n">Rate / hr</th><th class="n">Hours / day</th><th class="n">Open tasks</th><th class="n">Queued hrs</th><th class="n">Queue (days)</th><th>Load</th><th>Next free</th></tr></thead><tbody>
+  ${act.map(w => `<tr><td><b>${h(w.name)}</b></td><td>${(w.skills || []).map(s => `<span class="chip c-mut">${h(stage(s).name)}</span>`).join(' ')}</td><td class="n">${inr(w.rate)}</td><td class="n">${w.hoursPerDay}</td><td class="n">${ws[w.id].tasks.length}</td><td class="n">${ws[w.id].hrs.toFixed(1)}</td><td class="n">${ws[w.id].days.toFixed(1)}</td><td style="width:140px">${loadBar(ws[w.id].days, maxW)}</td><td>${fmtD(iso(startDate(ws[w.id].days)))}</td></tr>`).join('')}
+  </tbody></table></div>
+  <div class="card"><h3>Booked capacity · next ${N} working days</h3><table class="heat"><thead><tr><th style="text-align:left">Worker</th>${Array.from({length: N}, (_, d) => `<th>${idxDate(d).toLocaleDateString('en-IN', {weekday: 'short', day: 'numeric'})}</th>`).join('')}</tr></thead><tbody>
+  ${heat.map(({w, cells}) => `<tr><td style="text-align:left;white-space:nowrap">${h(w.name)}</td>${cells.map(f => `<td style="background:rgba(122,41,72,${Math.min(1, f) * 0.85 + (f > 0 ? 0.08 : 0)});color:${f > 0.55 ? '#fff' : '#555'}">${f > 0 ? Math.round(Math.min(1, f) * 100) + '%' : ''}</td>`).join('')}</tr>`).join('')}
+  </tbody></table></div>
+  ${act.map(w => `<div class="card"><details ${ws[w.id].tasks.length ? '' : ''}><summary><b>${h(w.name)}</b> — work queue (${ws[w.id].tasks.length} tasks, ${ws[w.id].hrs.toFixed(1)} h)</summary>
+    ${ws[w.id].tasks.length ? `<table><thead><tr><th>Order</th><th>Garment</th><th>Stage · piece</th><th class="n">Remaining h</th><th>Planned</th><th>Status</th></tr></thead><tbody>${ws[w.id].tasks.map(({o, it, t, x}) => `<tr class="click" onclick="go('order-${o.id}')"><td>${h(o.no)} ${prioChip(o.priority)}</td><td>${h(it.title)}</td><td>${h(stage(t.stage).name)} · ${h(t.piece)}${!t.workerId ? ' <span class="chip c-warn">auto</span>' : ''}</td><td class="n">${remHours(t, it, w).toFixed(1)}</td><td>${x ? `${fmtD(iso(startDate(x.segS ?? x.s)))} → ${fmtD(iso(endDate(x.e)))}` : '—'}</td><td>${taskChip(t)}</td></tr>`).join('')}</tbody></table>` : '<div class="muted">Free — no queued work.</div>'}</details></div>`).join('')}`;
+}
+
+/* ---------- customers ---------- */
+function vCustomers(){
+  return `<div class="row"><div><h1>Customers</h1><div class="sub">Profiles, style liking and apparel-wise measurement history.</div></div><span class="sp"></span><button class="pri" onclick="newCustomer()">+ New customer</button></div>
+  <div class="card"><table><thead><tr><th>Name</th><th>Phone</th><th>General liking</th><th class="n">Orders</th><th class="n">Billed</th></tr></thead><tbody>
+  ${DB.customers.slice().sort((a, b) => a.name.localeCompare(b.name)).map(c => { const os = DB.orders.filter(o => o.customerId === c.id && o.status !== 'cancelled'); return `<tr class="click" onclick="go('customer-${c.id}')"><td><b>${h(c.name)}</b></td><td>${h(c.phone)}</td><td class="muted" style="max-width:420px">${h(c.style)}</td><td class="n">${os.length}</td><td class="n">${inr(os.reduce((a, o) => a + orderTotals(o).total, 0))}</td></tr>`; }).join('') || '<tr><td colspan="5" class="empty">No customers yet</td></tr>'}
+  </tbody></table></div>`;
+}
+function newCustomer(){ const c = {id: uid('c'), name: 'New customer', phone: '', email: '', address: '', style: '', measHistory: [], created: nowISO()}; DB.customers.push(c); save(); go('customer-' + c.id); }
+function vCustomer(id){
+  const k = DB.customers.findIndex(c => c.id === id); if(k < 0) return '<div class="card">Customer not found.</div>';
+  const c = DB.customers[k], P = `customers.${k}`, os = DB.orders.filter(o => o.customerId === id).sort((a, b) => String(b.created).localeCompare(String(a.created)));
+  const byT = {}; (c.measHistory || []).forEach(m => (byT[m.tplId] = byT[m.tplId] || []).push(m));
+  const inp = (f, l) => `<div class="f"><label>${l}</label><input data-root="DB" data-p="${P}.${f}" value="${v(c[f])}"></div>`;
+  return `<div class="row"><div><div class="muted"><a href="#customers">← Customers</a></div><h1>${h(c.name)}</h1><div class="sub">Customer since ${fmtD(c.created)}</div></div><span class="sp"></span><button onclick="openCompose(null,null,'${c.id}')">💬 Message</button><button class="pri" onclick="newOrderFor('${c.id}')">+ New order for ${h(c.name.split(' ')[0])}</button></div>
+  <div class="grid2"><div class="card"><h3>Profile</h3><div class="row">${inp('name', 'Name')}${inp('phone', 'Phone / WhatsApp')}</div><div class="row">${inp('email', 'Email')}${inp('address', 'Address')}</div>
+    <div style="margin-top:8px"><label>General liking / style profile (shown on every new order)</label><textarea rows="3" data-root="DB" data-p="${P}.style">${h(c.style)}</textarea></div></div>
+  <div class="card"><h3>Orders</h3><table><tbody>${os.map(o => `<tr class="click" onclick="go('order-${o.id}')"><td><b>${h(o.no)}</b></td><td>${fmtD(o.created)}</td><td>${o.items.map(i => h(i.title)).join(', ')}</td><td class="n">${inr(orderTotals(o).total)}</td><td><span class="chip ${statusCls(o)}">${statusLabel(o)}</span></td></tr>`).join('') || '<tr><td class="muted">No orders yet</td></tr>'}</tbody></table></div></div>
+  <div class="card"><h3>Measurement history · apparel-wise</h3>
+  ${Object.keys(byT).length ? Object.entries(byT).map(([tid, list]) => { const t0 = tpl(tid) || {name: 'Unknown template', fields: []}; const last = list[list.length - 1]; return `<div style="margin-bottom:14px"><b>${h(t0.name)}</b> <span class="muted">· latest ${fmtD(last.date)} (${h(last.orderNo)}) · ${list.length} record${list.length > 1 ? 's' : ''}</span>
+    <table style="margin-top:6px"><thead><tr><th>Measurement</th>${list.slice(-4).map(m => `<th>${fmtD(m.date)}<br><span style="text-transform:none">${h(m.orderNo)}</span></th>`).join('')}</tr></thead><tbody>${t0.fields.map(f => `<tr><td>${h(f.sec)} · ${h(f.label)}</td>${list.slice(-4).map(m => `<td>${h(m.values[f.k] || '—')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`; }).join('') : '<div class="muted">Measurements are saved here automatically with each order.</div>'}
+  </div>`;
+}
+
+/* ---------- alerts ---------- */
+function vAlerts(){
+  const all = allAlerts(), A = all.filter(a => !DB.ack[a.key]), acked = all.filter(a => DB.ack[a.key]), s = ST();
+  const row = (a, ack) => `<div class="alert ${a.sev}"><div class="b"><div class="t">${h(a.title)} ${sevChip(a.sev)}</div><div class="muted">${h(a.detail)}</div></div>
+    ${a.oid ? `<button class="sm" onclick="go('order-${a.oid}')">Open order</button>` : `<button class="sm" onclick="go('workers')">Workload</button>`}
+    ${waA(s.adminPhone, adminMsg(a), '💬', 'Send to admin on WhatsApp')}
+    ${ack ? `<button class="sm ghost" onclick="unackAlert('${a.key}')">Reopen</button>` : `<button class="sm" onclick="ackAlert('${a.key}')">Acknowledge</button>`}</div>`;
+  return `<div class="row"><div><h1>Bottleneck alerts</h1><div class="sub">Checked automatically every time work is updated. Thresholds live in Setup.</div></div><span class="sp"></span>
+    <a class="btn" target="_blank" rel="noopener" href="${h(waLink(s.adminPhone, digest()))}">💬 Send digest to admin (WhatsApp)</a><a class="btn" target="_blank" rel="noopener" href="mailto:${h(s.adminEmail || '')}?subject=${encodeURIComponent(s.shop + ' — production alerts')}&amp;body=${encodeURIComponent(digest())}">✉ Email digest</a><button onclick="showDigest()">📋 Copy digest</button></div>
+  ${!s.adminPhone ? `<div class="banner info">Add the admin's WhatsApp number and email in <a href="#setup">Setup</a> so alerts can be sent straight to them.</div>` : ''}
+  <div class="card"><h3>Open (${A.length})</h3>${A.map(a => row(a, false)).join('') || '<div class="empty">No bottlenecks detected 🎉</div>'}</div>
+  ${acked.length ? `<div class="card"><details><summary>Acknowledged (${acked.length})</summary>${acked.map(a => row(a, true)).join('')}</details></div>` : ''}
+  <div class="card"><h3>What is monitored</h3><div class="muted">Promised date passed · tentative delivery after promised date · task running more than ${s.overrunPct}% over its estimate · external work not back on time · tasks with no worker or no skilled worker · steps waiting more than ${s.idleDays} working days for hand-off · workers with more than ${s.overloadDays} days queued · stages with more than ${s.stageQueueDays} days of queued work.</div></div>`;
+}
+function ackAlert(k){ DB.ack[k] = nowISO(); save(); render(); }
+function unackAlert(k){ delete DB.ack[k]; save(); render(); }
+function _unused_waAdmin(k){ const a = allAlerts().find(x => x.key === k); if(a) openWA(ST().adminPhone, `⚠ ${ST().shop} — ${a.title}\n${a.detail}`); }
+function digest(){ const A = activeAlerts(); return `${ST().shop} — bottleneck digest ${fmtD(todayISO())}\n\n` + (A.map((a, i) => `${i + 1}. [${a.sev.toUpperCase()}] ${a.title}: ${a.detail}`).join('\n') || 'No open alerts.'); }
+function waDigest(){ openWA(ST().adminPhone, digest()); }
+function mailDigest(){ location.href = `mailto:${encodeURIComponent(ST().adminEmail || '')}?subject=${encodeURIComponent(ST().shop + ' — production alerts')}&body=${encodeURIComponent(digest())}`; }
+
+/* ---------- setup ---------- */
+function vSetup(){
+  const s = ST(), k = Math.max(0, Math.min(SETUP_TPL, DB.templates.length - 1)), t = DB.templates[k], stages = DB.stages.slice().sort(bySeq);
+  const inp = (p, lab, type, cls) => `<div class="${cls || 'f'}"><label>${lab}</label><input type="${type || 'text'}" ${type === 'number' ? 'step="any"' : ''} data-root="DB" data-p="${p}" value="${v(getPath(DB, p))}"></div>`;
+  const tplTasks = t ? t.tasks.map((x, j) => { const P = `templates.${k}.tasks.${j}`, ext = x.mode === 'external'; return `<tr class="${ext ? 'ext' : ''}"><td><select data-root="DB" data-p="${P}.stage" data-r>${stages.map(st => opt(st.id, st.name + (st.type === 'external' ? ' (ext)' : ''), x.stage)).join('')}</select></td><td><input data-root="DB" data-p="${P}.piece" value="${v(x.piece)}"></td>
+      <td>${ext ? `<input data-root="DB" data-p="${P}.vendor" placeholder="Default vendor" value="${v(x.vendor)}">` : `<select data-root="DB" data-p="${P}.pricing" data-r>${opt('unit', 'Per piece / unit', x.pricing)}${opt('hour', 'Per hour', x.pricing)}${opt('fixed', 'Fixed', x.pricing)}</select>`}</td>
+      <td>${!ext && x.pricing === 'unit' ? `<input type="number" step="any" data-root="DB" data-p="${P}.units" value="${v(x.units)}">` : '—'}</td>
+      <td>${ext ? `<input type="number" step="any" data-root="DB" data-p="${P}.extCost" value="${v(x.extCost)}">` : `<input type="number" step="any" data-root="DB" data-p="${P}.rate" value="${v(x.rate)}">`}</td>
+      <td>${!ext && x.pricing === 'hour' ? `<select data-root="DB" data-p="${P}.cplx">${Object.keys(CPLX).map(c => opt(c, c, x.cplx)).join('')}</select>` : '—'}</td>
+      <td>${ext ? `<input type="number" step="any" data-root="DB" data-p="${P}.tatDays" value="${v(x.tatDays)}">` : `<input type="number" step="any" data-root="DB" data-p="${P}.hours" value="${v(x.hours)}">`}</td><td><button class="sm ghost danger" onclick="rmTplRow(${k},'tasks',${j})">✕</button></td></tr>`; }).join('') : '';
+  return `<h1>Setup</h1><div class="sub">Shop profile, calendar, workstreams, workers and alert thresholds. Changes save instantly.</div>
+  <div class="grid2">${shopProfileCard()}
+  <div class="card"><h2>Calendar, alerts & admin</h2>
+    <label>Weekly off</label><div>${['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d, i) => `<label class="inline"><input type="checkbox" ${(s.weeklyOff || []).includes(i) ? 'checked' : ''} onchange="toggleOff(${i},this.checked)"> ${d}</label>`).join('')}</div>
+    <div class="row">${inp('settings.holidays', 'Holidays (YYYY-MM-DD, comma separated)')}${inp('settings.qcBufferDays', 'QC buffer days', 'number', 'f s')}${inp('settings.unit', 'Measurement unit', 'text', 'f s')}</div>
+    <div class="row">${inp('settings.overrunPct', 'Task overrun alert %', 'number', 'f s')}${inp('settings.overloadDays', 'Worker overload (days)', 'number', 'f s')}${inp('settings.stageQueueDays', 'Stage bottleneck (days)', 'number', 'f s')}${inp('settings.idleDays', 'Hand-off delay (days)', 'number', 'f s')}</div>
+    <div class="row">${inp('settings.adminName', 'Admin name')}${inp('settings.adminPhone', 'Admin WhatsApp no.')}${inp('settings.adminEmail', 'Admin email')}</div>
+    <div class="row" style="margin-top:10px;align-items:center"><button onclick="enableNotif()">🔔 Enable desktop notifications</button><span class="muted">Status: ${'Notification' in window ? Notification.permission : 'not supported'}${IN_FRAME ? ' · may be blocked in the shared viewer' : ''}</span></div></div></div>
+  <div class="grid2"><div class="card"><h2>Workstreams / stages</h2><div class="hint" style="margin:-6px 0 8px">Sequence decides the flow order; same sequence = runs in parallel. External stages are sent to vendors (cost + turnaround days).</div>
+    <table class="ed"><thead><tr><th>Stage</th><th style="width:70px">Seq</th><th style="width:120px">Type</th><th style="width:100px">Default ₹/hr</th><th></th></tr></thead><tbody>
+    ${DB.stages.map((st, j) => `<tr><td><input data-root="DB" data-p="stages.${j}.name" value="${v(st.name)}"></td><td><input type="number" data-root="DB" data-p="stages.${j}.seq" value="${v(st.seq)}" data-r></td><td><select data-root="DB" data-p="stages.${j}.type" data-r>${opt('internal', 'In-house', st.type)}${opt('external', 'External', st.type)}</select></td><td><input type="number" step="any" data-root="DB" data-p="stages.${j}.rate" value="${v(st.rate)}"></td><td><button class="sm ghost danger" onclick="rmStage(${j})">✕</button></td></tr>`).join('')}
+    </tbody></table><button class="sm" style="margin-top:6px" onclick="addStage()">+ Add stage</button></div>
+  <div class="card"><h2>Workers</h2><table class="ed"><thead><tr><th>Name</th><th>Skills</th><th style="width:80px">₹ / hr</th><th style="width:70px">Hrs/day</th><th>Active</th><th></th></tr></thead><tbody>
+    ${DB.workers.map((w, j) => `<tr><td><input data-root="DB" data-p="workers.${j}.name" value="${v(w.name)}"><input style="margin-top:3px" placeholder="Phone" data-root="DB" data-p="workers.${j}.phone" value="${v(w.phone)}"></td><td style="font-size:12px">${stages.filter(st => st.type === 'internal').map(st => `<label class="inline" style="font-size:12px;margin-right:6px"><input type="checkbox" ${(w.skills || []).includes(st.id) ? 'checked' : ''} onchange="toggleSkill(${j},'${st.id}',this.checked)"> ${h(st.name.split(' ')[0])}</label>`).join('')}</td><td><input type="number" step="any" data-root="DB" data-p="workers.${j}.rate" value="${v(w.rate)}"></td><td><input type="number" step="any" data-root="DB" data-p="workers.${j}.hoursPerDay" value="${v(w.hoursPerDay)}"></td><td><input type="checkbox" data-root="DB" data-p="workers.${j}.active" ${w.active !== false ? 'checked' : ''} data-r></td><td><button class="sm ghost danger" onclick="rmWorker(${j})">✕</button></td></tr>`).join('')}
+    </tbody></table><button class="sm" style="margin-top:6px" onclick="addWorker()">+ Add worker</button></div></div>
+  <div class="card"><h2>Dress types, designs & messages</h2><div class="muted">Dress types (measurements, pieces, default work plan) and the design catalogue live in <a href="#config">Configurator</a>. SMS / WhatsApp presets live in <a href="#comms">Communication</a>.</div></div>
+  <div class="card"><h2>Data</h2><div class="row"><button onclick="exportData(false)">⬇ Export data</button><button onclick="exportData(true)">⬇ Export data + images</button><label class="btn" style="margin:0;color:var(--ink)">⬆ Import backup<input type="file" accept=".json" style="display:none" onchange="importData(this)"></label><button onclick="resetDemo()">Reset to demo data</button><button class="danger" onclick="clearData()">Clear orders, customers & invoices</button></div>
+    <div class="hint">All data is kept in this browser's local storage on this computer. Export regularly; clearing browser data will erase it.</div></div>`;
+}
+function toggleOff(d, on){ const w = new Set(ST().weeklyOff || []); on ? w.add(d) : w.delete(d); if(w.size >= 7) return toast('At least one working day is needed', 'bad'); ST().weeklyOff = [...w]; save(); render(); }
+function toggleSkill(j, sid, on){ const w = DB.workers[j], s = new Set(w.skills || []); on ? s.add(sid) : s.delete(sid); w.skills = [...s]; save(); }
+function addStage(){ DB.stages.push({id: uid('s'), name: 'New stage', seq: Math.max(0, ...DB.stages.map(s => num(s.seq))) + 1, type: 'internal', rate: 0}); save(); render(); }
+function rmStage(j){ const s = DB.stages[j]; const used = DB.orders.some(o => o.items.some(it => it.tasks.some(t => t.stage === s.id))) || DB.templates.some(t => t.tasks.some(x => x.stage === s.id)); if(used) return toast(`"${s.name}" is used by orders or templates and can't be removed`, 'bad'); ask(`Remove stage "${s.name}"?`, () => { DB.stages.splice(j, 1); save(); render(); }); }
+function addWorker(){ DB.workers.push({id: uid('w'), name: 'New worker', phone: '', skills: [], rate: 100, hoursPerDay: 8, active: true}); save(); render(); }
+function rmWorker(j){ const w = DB.workers[j]; const n = openOrders().reduce((a, o) => a + o.items.reduce((b, it) => b + it.tasks.filter(t => t.workerId === w.id && t.status !== 'done').length, 0), 0); ask(`Remove ${w.name}?${n ? ` ${n} open task(s) will become unassigned.` : ''} (Tip: untick Active to keep history.)`, () => { DB.orders.forEach(o => o.items.forEach(it => it.tasks.forEach(t => { if(t.workerId === w.id && t.status !== 'done') t.workerId = ''; }))); DB.workers.splice(j, 1); save(); render(); }); }
+function setFields(k, text){ const t = DB.templates[k]; t.fields = text.split('\n').map(l => l.trim()).filter(Boolean).map(l => { const [a, b] = l.includes('|') ? l.split('|').map(x => x.trim()) : ['General', l]; return {k: slug(a + '_' + b), label: b, sec: a}; }); save(); render(); toast('Measurement fields updated', 'ok'); }
+function addTpl(){ DB.templates.push({id: uid('t'), name: 'New apparel type', fields: F('Main', 'Length,Chest,Waist'), components: [], tasks: []}); SETUP_TPL = DB.templates.length - 1; save(); render(); }
+function dupTpl(k){ const t = clone(DB.templates[k]); t.id = uid('t'); t.name += ' (copy)'; DB.templates.push(t); SETUP_TPL = DB.templates.length - 1; save(); render(); }
+function rmTpl(k){ const t = DB.templates[k]; if(DB.orders.some(o => o.items.some(it => it.tplId === t.id))) return toast('Template is used by existing orders — rename or duplicate it instead', 'bad'); if(DB.templates.length < 2) return toast('Keep at least one template', 'bad'); ask(`Delete template "${t.name}"?`, () => { DB.templates.splice(k, 1); SETUP_TPL = 0; save(); render(); }); }
+function addTplComp(k){ DB.templates[k].components.push({id: uid('c'), name: '', unit: 'pc', qty: 1, rate: 0}); save(); render(); }
+function addTplTask(k){ const s = DB.stages.filter(x => x.type === 'internal').sort(bySeq)[0]; DB.templates[k].tasks.push(Ti(s.id, '', 'unit', 1, s.rate || 0, '', 1)); save(); render(); }
+function rmTplRow(k, key, j){ DB.templates[k][key].splice(j, 1); save(); render(); }
+function resetDemo(){ ask('Replace everything with fresh demo data? Uploaded design images stay stored but unlinked.', () => { seed(); migrate(); save(); EDIT = null; go('dashboard'); checkNotify(); }); }
+function clearData(){ ask('Delete all orders, customers and invoices? Setup (stages, workers, templates, settings) is kept. This cannot be undone.', () => { DB.orders = []; DB.customers = []; DB.invoices = []; DB.ack = {}; DB.notified = {}; ST().nextOrder = 1000; ST().nextInv = 1; save(); go('dashboard'); }); }
+function enableNotif(){ if(!('Notification' in window)) return toast('Notifications are not supported in this browser', 'bad'); Notification.requestPermission().then(p => { toast('Notifications: ' + p, p === 'granted' ? 'ok' : 'bad'); render(); }); }
+
+/* =====================================================================
+   v2 MODULES: media store · design configurator · shop profile · communication
+   ===================================================================== */
+
+/* ---------------- media store (IndexedDB, images & 3D files) ---------------- */
+const MEDIA = {db: null, urls: new Map(), mem: new Map()};
+function mediaOpen(){
+  return new Promise(res => {
+    const done = () => res(); setTimeout(done, 2500);
+    try{ const r = indexedDB.open('boutique_media_v1', 1); r.onupgradeneeded = () => r.result.createObjectStore('files'); r.onsuccess = () => { MEDIA.db = r.result; done(); }; r.onerror = done; r.onblocked = done; }catch(e){ done(); }
+  });
+}
+function mediaPut(id, blob){
+  MEDIA.mem.set(id, blob); if(MEDIA.urls.has(id)){ URL.revokeObjectURL(MEDIA.urls.get(id)); MEDIA.urls.delete(id); }
+  if(!MEDIA.db) return Promise.resolve();
+  return new Promise(res => { try{ const tx = MEDIA.db.transaction('files', 'readwrite'); tx.objectStore('files').put(blob, id); tx.oncomplete = () => res(); tx.onerror = () => res(); }catch(e){ res(); } });
+}
+function mediaGet(id){
+  if(MEDIA.mem.has(id)) return Promise.resolve(MEDIA.mem.get(id));
+  if(!MEDIA.db) return Promise.resolve(null);
+  return new Promise(res => { try{ const rq = MEDIA.db.transaction('files').objectStore('files').get(id); rq.onsuccess = () => { if(rq.result) MEDIA.mem.set(id, rq.result); res(rq.result || null); }; rq.onerror = () => res(null); }catch(e){ res(null); } });
+}
+function mediaUsed(id){ return DB.designs.some(d => [...d.stencils, ...d.samples, ...d.renders, ...d.spin, d.model].includes(id)); }
+function mediaDel(id){
+  if(!id || id.startsWith('demo:') || mediaUsed(id)) return;
+  MEDIA.mem.delete(id); if(MEDIA.urls.has(id)){ URL.revokeObjectURL(MEDIA.urls.get(id)); MEDIA.urls.delete(id); }
+  if(MEDIA.db){ try{ MEDIA.db.transaction('files', 'readwrite').objectStore('files').delete(id); }catch(e){} }
+}
+async function mediaUrl(id){
+  if(!id) return ''; if(id.startsWith('demo:')) return demoSvg(id);
+  if(MEDIA.urls.has(id)) return MEDIA.urls.get(id);
+  const b = await mediaGet(id); if(!b) return '';
+  const u = URL.createObjectURL(b); MEDIA.urls.set(id, u); return u;
+}
+function hydrate(root){
+  (root || document).querySelectorAll('[data-media]:not([data-h])').forEach(async el => {
+    el.dataset.h = '1'; const u = await mediaUrl(el.dataset.media);
+    if(!u){ el.classList.add('missing'); return; }
+    if(el.tagName === 'IMG' || el.tagName === 'MODEL-VIEWER') el.setAttribute('src', u);
+    else { el.style.backgroundImage = `url("${u}")`; el.textContent = ''; }
+  });
+}
+function readImage(file, max, type){
+  return new Promise((res, rej) => {
+    if(!/^image\//.test(file.type)) return rej(new Error('not an image'));
+    if(file.type === 'image/svg+xml' || file.type === 'image/gif') return res(file);
+    const u = URL.createObjectURL(file), im = new Image();
+    im.onload = () => {
+      const sc = Math.min(1, max / Math.max(im.width, im.height)), c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(im.width * sc)); c.height = Math.max(1, Math.round(im.height * sc));
+      const g = c.getContext('2d'); if(type !== 'image/png'){ g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); }
+      g.drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(u);
+      c.toBlob(b => res(b || file), type || 'image/jpeg', 0.85);
+    };
+    im.onerror = () => { URL.revokeObjectURL(u); rej(new Error('could not read image')); };
+    im.src = u;
+  });
+}
+function blobToDataURL(b){ return new Promise(r => { const f = new FileReader(); f.onload = () => r(f.result); f.readAsDataURL(b); }); }
+function dataURLToBlob(u){ const [m, d] = u.split(','); const mime = (m.match(/:(.*?);/) || [])[1] || 'application/octet-stream'; const bin = atob(d); const a = new Uint8Array(bin.length); for(let i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i); return new Blob([a], {type: mime}); }
+
+/* ---------------- demo artwork (generated SVG, no files needed) ---------------- */
+const DEMO_CACHE = {};
+const svgURL = s => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(s);
+const PAISLEY = 'M0,-38 C26,-38 38,-6 24,22 C12,44 -20,46 -26,20 C-31,0 -14,-12 -2,-10 C8,-8 10,6 2,10';
+function motif(kind, st, fill, sw){
+  if(kind === 'paisley') return `<path d="${PAISLEY}" fill="${fill}" stroke="${st}" stroke-width="${sw}"/><circle cx="-6" cy="16" r="5" fill="none" stroke="${st}" stroke-width="${sw}"/><path d="M-14,30 q8,-6 16,0 M-18,38 q12,-8 26,0" fill="none" stroke="${st}" stroke-width="${sw}"/>`;
+  if(kind === 'floral') return Array.from({length: 8}, (_, i) => `<ellipse cx="0" cy="-18" rx="7" ry="16" transform="rotate(${i * 45})" fill="${fill}" stroke="${st}" stroke-width="${sw}"/>`).join('') + `<circle r="7" fill="${st}"/>`;
+  return `<path d="M0,-42 L30,0 L0,42 L-30,0 Z" fill="none" stroke="${st}" stroke-width="${sw}"/>` + Array.from({length: 6}, (_, i) => `<ellipse cx="0" cy="-11" rx="4.5" ry="11" transform="rotate(${i * 60})" fill="${fill}" stroke="${st}" stroke-width="${sw}"/>`).join('') + `<circle r="3.5" fill="${st}"/>`;
+}
+function tile(kind, st, fill, sw, cols, rows, W, H, off){
+  let s = ''; const dx = W / cols, dy = H / rows, sc = (Math.min(dx, dy) / 100).toFixed(3), o = (off || 0) % dx;
+  for(let r = 0; r < rows; r++) for(let c = -2; c <= cols + 1; c++){ const x = (c + 0.5 + (r % 2 ? 0.5 : 0)) * dx + o, y = (r + 0.5) * dy; s += `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) scale(${sc})">${motif(kind, st, fill, sw)}</g>`; }
+  return s;
+}
+const DEMO_COL = {jaal: ['#bfe3d0', '#b8892e', '#e9d9a6'], paisley: ['#7a2333', '#d4af37', '#a8424f'], floral: ['#f2c9cf', '#b8892e', '#fff4e8'], lapel: ['#1f2a44', '#c9ced8', '#6e1f33']};
+function lapelSvg(stencil){
+  const st = stencil ? 'stroke="#2b2226" stroke-width="2.4" stroke-dasharray="6 4" fill="none"' : '';
+  const body = 'M200,70 L262,48 L300,130 L338,48 L400,70 L452,130 L440,420 L160,420 L148,130 Z';
+  const lapL = 'M262,48 L246,150 L214,138 L300,300 Z', lapR = 'M338,48 L354,150 L386,138 L300,300 Z';
+  if(stencil) return `<path d="${body}" ${st}/><path d="${lapL}" ${st}/><path d="${lapR}" ${st}/><path d="M205,330 h62 M333,330 h62 M335,200 h40" ${st}/><circle cx="300" cy="335" r="7" ${st}/><circle cx="300" cy="375" r="7" ${st}/><path d="M300,300 L300,420" ${st}/>`;
+  return `<path d="${body}" fill="#1f2a44"/><path d="M262,48 L300,130 L338,48 L300,300 Z" fill="#6e1f33"/><path d="M290,70 L300,130 L310,70 Z" fill="#f4f1ea"/><path d="${lapL}" fill="#2c3a5c"/><path d="${lapR}" fill="#2c3a5c"/><path d="M205,330 h62 M333,330 h62 M335,200 h40" stroke="#3d4b6e" stroke-width="5"/><circle cx="300" cy="335" r="8" fill="#5b4632"/><circle cx="300" cy="375" r="8" fill="#5b4632"/><path d="M300,300 L300,420" stroke="#141c2e" stroke-width="3"/>`;
+}
+function demoSvg(id){
+  if(DEMO_CACHE[id]) return DEMO_CACHE[id];
+  const p = id.split(':'), what = p[1], kind = p[2], [bg, gold, soft] = DEMO_COL[kind] || DEMO_COL.jaal;
+  let svg;
+  if(what === 'stencil'){
+    svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 450"><rect width="600" height="450" fill="#fdfcf8"/>${kind === 'lapel' ? lapelSvg(true) : `<g stroke-dasharray="4 3">${tile(kind, '#2b2226', 'none', 2.4, 4, 3, 600, 450)}</g>`}<text x="16" y="436" font-family="monospace" font-size="13" fill="#7d7074">STENCIL · ${kind.toUpperCase()} · demo artwork</text></svg>`;
+  } else if(what === 'sample'){
+    svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 450"><defs><pattern id="w" width="6" height="6" patternUnits="userSpaceOnUse"><path d="M0,6 L6,0" stroke="#000" stroke-opacity=".05"/></pattern><radialGradient id="l" cx=".35" cy=".3" r=".9"><stop offset="0" stop-color="#fff" stop-opacity=".25"/><stop offset="1" stop-color="#000" stop-opacity=".25"/></radialGradient></defs><rect width="600" height="450" fill="${kind === 'lapel' ? '#e9e4da' : bg}"/><rect width="600" height="450" fill="url(#w)"/>${kind === 'lapel' ? lapelSvg(false) : tile(kind, gold, soft, 2.2, 4, 3, 600, 450)}<rect width="600" height="450" fill="url(#l)"/><text x="16" y="436" font-family="sans-serif" font-size="13" fill="#fff" fill-opacity=".85">Sample photo · demo artwork</text></svg>`;
+  } else { // spin frame demo:spin:kind:i:n
+    const i = +p[3], n = +p[4] || 24, a = i / n * Math.PI * 2, off = i / n * 150;
+    const sil = kind === 'paisley'
+      ? 'M230,60 Q300,40 370,60 L420,110 L400,140 L380,120 L385,420 Q300,435 215,420 L220,120 L200,140 L180,110 Z'
+      : 'M250,70 Q300,56 350,70 L360,170 Q300,184 240,170 Z M245,186 Q300,176 355,186 L470,430 Q300,460 130,430 Z';
+    const fx = 300 + Math.sin(a) * 70, fo = Math.max(0, Math.cos(a));
+    svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 480"><defs><clipPath id="c"><path d="${sil}"/></clipPath><linearGradient id="s" x1="0" x2="1"><stop offset="0" stop-color="#000" stop-opacity=".45"/><stop offset=".5" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".45"/></linearGradient></defs><rect width="600" height="480" fill="#f4eef0"/><ellipse cx="300" cy="455" rx="120" ry="14" fill="#2b1a22" opacity=".15"/><g clip-path="url(#c)"><rect width="600" height="480" fill="${bg}"/>${tile(kind, gold, soft, 2.2, 4, 4, 600, 480, off)}<rect x="120" width="360" height="480" fill="url(#s)"/><circle cx="${fx.toFixed(1)}" cy="${kind === 'paisley' ? 90 : 110}" r="9" fill="${gold}" opacity="${fo.toFixed(2)}"/></g><text x="16" y="470" font-family="sans-serif" font-size="12" fill="#7d7074">360° demo frame ${i + 1}/${n}</text></svg>`;
+  }
+  return DEMO_CACHE[id] = svgURL(svg);
+}
+function demoLogo(){ return svgURL(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 120"><rect width="200" height="120" rx="14" fill="#7a2948"/><circle cx="52" cy="60" r="34" fill="none" stroke="#e9c77b" stroke-width="3"/><text x="52" y="72" text-anchor="middle" font-family="Georgia,serif" font-size="32" fill="#e9c77b">S&amp;T</text><text x="98" y="56" font-family="Georgia,serif" font-size="20" fill="#fff">Silk &amp;</text><text x="98" y="80" font-family="Georgia,serif" font-size="20" fill="#fff">Thread</text></svg>`); }
+function demoDesigns(){
+  const D = (id, name, code, tplId, tags, description, kind, spinN, addComps, addTasks) => ({id, name, code, tplId, tags, description, stencils: [`demo:stencil:${kind}`], samples: [`demo:sample:${kind}`], renders: [], spin: spinN ? Array.from({length: spinN}, (_, i) => `demo:spin:${kind}:${i}:${spinN}`) : [], model: '', cover: '', addComps: C(addComps), addTasks, active: true, created: nowISO()});
+  return [
+    D('d_jaal', 'Mughal Jaal Zardosi', 'DSN-101', 't_lehenga', 'bridal, zardosi, all-over', 'All-over diamond jaal with six-petal florets in antique gold zardosi. Heavier on the ghera, tapering towards the waist.', 'jaal', 24, [['Zari thread (antique gold)', 'spool', 6, 180], ['Dabka & nakshi', 'pack', 2, 260]], [Ti('emb', 'Jaal stencil tracing & framing', 'fixed', 1, 600, '', 2), Ti('emb', 'Extra jaal fill on ghera', 'hour', '', 200, 'Heavy', 8)]),
+    D('d_paisley', 'Paisley Butta Neckline', 'DSN-102', 't_kurta', 'festive, resham, neckline', 'Classic paisley buttis in gold resham around the neckline and placket, scattered buttis on the body.', 'paisley', 24, [['Resham thread (gold)', 'spool', 2, 90]], [Ti('emb', 'Scattered butti work', 'hour', '', 180, 'Medium', 3)]),
+    D('d_floral', 'Floral Aari Back', 'DSN-103', 't_blouse', 'aari, floral, back design', 'Eight-petal florals in aari for a deep-back blouse, with a finished gold centre.', 'floral', 0, [['Aari thread & beads', 'set', 1, 220]], [Ti('emb', 'Back panel aari motif', 'hour', '', 180, 'Medium', 4)]),
+    D('d_lapel', 'Classic Peak Lapel', 'DSN-104', 't_suit', 'formal, peak lapel, wedding', 'Single-breasted two-button jacket with sharp peak lapels, flap pockets and a contrast maroon lining.', 'lapel', 0, [['Contrast lining upgrade', 'm', 2, 150]], [Ti('stitch', 'Hand pick-stitch on lapel edge', 'fixed', 1, 450, '', 1.5)])
+  ];
+}
+
+/* ---------------- migration (adds v2 data to older saves) ---------------- */
+function migrate(){
+  const s = DB.settings;
+  const def = {logo: '', website: '', landline: '', pan: '', upiId: '', bank: ''};
+  Object.keys(def).forEach(k => { if(s[k] === undefined) s[k] = def[k]; });
+  DB.ack = DB.ack || {}; DB.notified = DB.notified || {};
+  DB.designs = DB.designs || []; DB.msgLog = DB.msgLog || [];
+  if(!DB.msgTemplates) DB.msgTemplates = defaultMsgTemplates();
+  if(!DB.v2seeded){
+    DB.v2seeded = true;
+    if(DB.templates.some(t => t.id === 't_lehenga')) DB.designs.push(...demoDesigns().filter(d => tpl(d.tplId)));
+    if(!s.logo && s.shop === 'Silk & Thread Couture'){ s.logo = demoLogo(); s.website = s.website || 'www.silkandthread.example'; s.upiId = s.upiId || 'silkandthread@upi'; }
+    const o = DB.orders.find(x => x.no === 'ORD-1002'); if(o && o.items[1] && !o.items[1].designId) o.items[1].designId = 'd_jaal';
+    const k = DB.orders.find(x => x.no === 'ORD-1003'); if(k && k.items[0] && !k.items[0].designId) k.items[0].designId = 'd_paisley';
+  }
+  DB.designs.forEach(d => ['stencils', 'samples', 'renders', 'spin', 'addComps', 'addTasks'].forEach(f => d[f] = d[f] || []));
+}
+
+/* ---------------- shop profile ---------------- */
+async function setLogo(inp){
+  const f = inp.files[0]; if(!f) return;
+  try{ const b = await readImage(f, 400, 'image/png'); ST().logo = await blobToDataURL(b); save(); render(); toast('Logo updated', 'ok'); }
+  catch(e){ toast('Logo: ' + e.message, 'bad'); }
+}
+function shopProfileCard(){
+  const s = ST();
+  const inp = (p, lab, type, cls, ph) => `<div class="${cls || 'f'}"><label>${lab}</label><input type="${type || 'text'}" ${type === 'number' ? 'step="any"' : ''} data-root="DB" data-p="${p}" value="${v(getPath(DB, p))}" ${ph ? `placeholder="${h(ph)}"` : ''}></div>`;
+  return `<div class="card"><h2>Shop profile (admin)</h2>
+    <div class="row" style="align-items:center;margin-bottom:10px"><div class="logo-box">${s.logo ? `<img src="${s.logo}" alt="Logo">` : '<span class="muted">No logo</span>'}</div>
+      <div><label class="btn sm" style="margin:0;color:var(--ink)">⬆ Upload logo<input type="file" accept="image/*" style="display:none" onchange="setLogo(this)"></label> ${s.logo ? `<button class="sm ghost danger" onclick="ST().logo='';save();render()">Remove</button>` : ''}<div class="hint">PNG or SVG with transparent background works best. Shown in the sidebar, on invoices and job cards.</div></div></div>
+    <div class="row">${inp('settings.shop', 'Shop name')}${inp('settings.tagline', 'Tagline')}</div>
+    <div class="row">${inp('settings.address', 'Address')}</div>
+    <div class="row">${inp('settings.phone', 'Mobile / WhatsApp')}${inp('settings.landline', 'Landline')}${inp('settings.email', 'Email')}</div>
+    <div class="row">${inp('settings.website', 'Website', 'text', 'f', 'www.yourboutique.in')}${inp('settings.gstin', 'GST number (GSTIN)')}${inp('settings.pan', 'PAN')}</div>
+    <div class="row">${inp('settings.upiId', 'UPI ID (on invoices & messages)')}${inp('settings.sac', 'SAC / HSN code')}</div>
+    <div style="margin-top:8px"><label>Bank details (printed on invoice)</label><textarea rows="2" data-root="DB" data-p="settings.bank" placeholder="A/c name, A/c no., IFSC, branch">${h(s.bank)}</textarea></div>
+    <div class="row" style="margin-top:8px">${inp('settings.gstPct', 'Default GST %', 'number', 'f s')}<div class="f s"><label>Tax type</label><select data-root="DB" data-p="settings.taxMode">${opt('intra', 'CGST + SGST', s.taxMode)}${opt('inter', 'IGST', s.taxMode)}</select></div>${inp('settings.markupPct', 'Default markup %', 'number', 'f s')}${inp('settings.invPrefix', 'Invoice prefix', 'text', 'f s')}${inp('settings.orderPrefix', 'Order prefix', 'text', 'f s')}</div>
+    <div style="margin-top:8px"><label>Invoice terms</label><textarea rows="2" data-root="DB" data-p="settings.terms">${h(s.terms)}</textarea></div>
+    <div class="hint">Confirm the GST rate and SAC/HSN code that apply to your services with your CA. Blank GSTIN prints a plain “Invoice”.</div></div>`;
+}
+
+/* ---------------- generic master tables (dress types & design add-ons) ---------------- */
+function compTable(path, list){
+  return `<table class="ed"><thead><tr><th>Piece / material</th><th style="width:80px">Unit</th><th style="width:80px">Qty</th><th style="width:100px">Rate ₹</th><th style="width:34px"></th></tr></thead><tbody>
+  ${list.map((c, j) => `<tr><td><input data-root="DB" data-p="${path}.${j}.name" value="${v(c.name)}"></td><td><input data-root="DB" data-p="${path}.${j}.unit" value="${v(c.unit)}"></td><td><input type="number" step="any" data-root="DB" data-p="${path}.${j}.qty" value="${v(c.qty)}"></td><td><input type="number" step="any" data-root="DB" data-p="${path}.${j}.rate" value="${v(c.rate)}"></td><td><button class="sm ghost danger" onclick="rmAt('${path}',${j})">✕</button></td></tr>`).join('') || '<tr><td colspan="5" class="muted">None</td></tr>'}
+  </tbody></table><button class="sm" style="margin-top:6px" onclick="addCompAt('${path}')">+ Add piece / material</button>`;
+}
+function taskTable(path, list){
+  const stages = DB.stages.slice().sort(bySeq);
+  return `<div style="overflow-x:auto"><table class="ed" style="min-width:860px"><thead><tr><th style="width:170px">Stage</th><th>Piece / work</th><th style="width:150px">Pricing / vendor</th><th style="width:70px">Units</th><th style="width:95px">Rate / charge ₹</th><th style="width:110px">Complexity</th><th style="width:90px">Hrs / TAT d</th><th style="width:34px"></th></tr></thead><tbody>
+  ${list.map((x, j) => { const P = `${path}.${j}`, ext = x.mode === 'external'; return `<tr class="${ext ? 'ext' : ''}"><td><select data-root="DB" data-p="${P}.stage" data-r>${stages.map(st => opt(st.id, st.name + (st.type === 'external' ? ' (ext)' : ''), x.stage)).join('')}</select></td><td><input data-root="DB" data-p="${P}.piece" value="${v(x.piece)}"></td>
+    <td>${ext ? `<input data-root="DB" data-p="${P}.vendor" placeholder="Default vendor" value="${v(x.vendor)}">` : `<select data-root="DB" data-p="${P}.pricing" data-r>${opt('unit', 'Per piece / unit', x.pricing)}${opt('hour', 'Per hour', x.pricing)}${opt('fixed', 'Fixed', x.pricing)}</select>`}</td>
+    <td>${!ext && x.pricing === 'unit' ? `<input type="number" step="any" data-root="DB" data-p="${P}.units" value="${v(x.units)}">` : '—'}</td>
+    <td>${ext ? `<input type="number" step="any" data-root="DB" data-p="${P}.extCost" value="${v(x.extCost)}">` : `<input type="number" step="any" data-root="DB" data-p="${P}.rate" value="${v(x.rate)}">`}</td>
+    <td>${!ext && x.pricing === 'hour' ? `<select data-root="DB" data-p="${P}.cplx">${Object.keys(CPLX).map(c => opt(c, `${c} ×${CPLX[c]}`, x.cplx)).join('')}</select>` : '—'}</td>
+    <td>${ext ? `<input type="number" step="any" data-root="DB" data-p="${P}.tatDays" value="${v(x.tatDays)}">` : `<input type="number" step="any" data-root="DB" data-p="${P}.hours" value="${v(x.hours)}">`}</td><td><button class="sm ghost danger" onclick="rmAt('${path}',${j})">✕</button></td></tr>`; }).join('') || '<tr><td colspan="8" class="muted">None</td></tr>'}
+  </tbody></table></div><button class="sm" style="margin-top:6px" onclick="addTaskAt('${path}')">+ Add work</button>`;
+}
+function rmAt(path, j){ getPath(DB, path).splice(j, 1); save(); render(); }
+function addCompAt(path){ getPath(DB, path).push({id: uid('c'), name: '', unit: 'pc', qty: 1, rate: 0}); save(); render(); }
+function addTaskAt(path){ const s = DB.stages.filter(x => x.type === 'internal').sort(bySeq)[0] || DB.stages[0]; getPath(DB, path).push(Ti(s.id, '', 'unit', 1, s.rate || 0, '', 1)); save(); render(); }
+
+/* ---------------- configurator ---------------- */
+let CONF_TAB = 'designs', CONF_TPL = '', CONF_Q = '';
+const design = id => id ? (DB.designs || []).find(d => d.id === id) : undefined;
+const MEDIA_LABEL = {samples: 'Sample photo', stencils: 'Stencil', renders: '3D render', spin: '360° frame'};
+function coverOf(d){ const all = [...d.samples, ...d.renders, ...d.stencils, ...d.spin]; return d.cover && all.includes(d.cover) ? d.cover : (all[0] || ''); }
+function ensureMV(){
+  if(window.customElements && customElements.get('model-viewer')) return;
+  if(document.getElementById('mvjs')) return;
+  const s = document.createElement('script'); s.type = 'module'; s.id = 'mvjs'; s.src = 'https://cdn.jsdelivr.net/npm/@google/model-viewer@3.4.0/dist/model-viewer.min.js'; document.head.appendChild(s);
+}
+function vConfig(){
+  return `<div class="row"><div><h1>Configurator</h1><div class="sub">Dress types drive measurements, pieces and the default work plan. The design catalogue holds stencils, sample photos, 3D and 360° views clients can choose from.</div></div></div>
+  <div class="tabs">${[['designs', `Design catalogue (${DB.designs.length})`], ['types', `Dress types (${DB.templates.length})`]].map(([k, l]) => `<button class="${CONF_TAB === k ? 'pri' : ''}" onclick="CONF_TAB='${k}';render()">${l}</button>`).join('')}</div>
+  ${CONF_TAB === 'designs' ? confDesigns() : confTypes()}`;
+}
+function confDesigns(){
+  const q = CONF_Q.toLowerCase();
+  const list = DB.designs.filter(d => (!CONF_TPL || d.tplId === CONF_TPL) && (!q || `${d.name} ${d.code} ${d.tags}`.toLowerCase().includes(q)));
+  return `<div class="row" style="margin-bottom:14px"><select style="width:auto" onchange="CONF_TPL=this.value;render()">${opt('', 'All dress types', CONF_TPL)}${DB.templates.map(t => opt(t.id, t.name, CONF_TPL)).join('')}</select><input style="max-width:260px" placeholder="Search name, code or tag — press Enter" value="${v(CONF_Q)}" onchange="CONF_Q=this.value;render()"><span class="sp"></span><button class="pri" onclick="newDesign()">+ New design</button></div>
+  ${list.length ? designGrid(list, null) : '<div class="card empty">No designs match. Click “New design” to add one.</div>'}`;
+}
+function designGrid(list, act){
+  return `<div class="dgrid">${list.map(d => { const c = coverOf(d), on = act ? act.replace('ID', d.id) : `go('design-${d.id}')`, uses = DB.orders.filter(o => o.items.some(i => i.designId === d.id)).length;
+    const meta = [d.samples.length && `📷 ${d.samples.length}`, d.stencils.length && `✏️ ${d.stencils.length}`, (d.renders.length || d.model) && '🧊 3D', d.spin.length && '🔄 360°', uses && `🧾 ${uses} order${uses > 1 ? 's' : ''}`].filter(Boolean).join(' · ');
+    return `<div class="dcard" onclick="${on}"><div class="dimg" ${c ? `data-media="${c}"` : ''}>✦</div><div class="b"><div class="row" style="gap:6px"><b>${h(d.name)}</b>${d.active === false ? '<span class="chip c-mut">inactive</span>' : ''}</div><div class="muted" style="font-size:12px">${h(d.code)} · ${h(tpl(d.tplId)?.name || '—')}</div><div class="muted" style="margin-top:6px;font-size:11.5px">${meta || 'No media yet'}</div></div></div>`; }).join('')}</div>`;
+}
+function confTypes(){
+  const k = Math.max(0, Math.min(SETUP_TPL, DB.templates.length - 1)), t = DB.templates[k];
+  return `<div class="card"><div class="row" style="align-items:center">${DB.templates.map((x, j) => `<button class="sm ${j === k ? 'pri' : ''}" onclick="SETUP_TPL=${j};render()">${h(x.name)}</button>`).join('')}<span class="sp"></span><button class="sm" onclick="addTpl()">+ New dress type</button>${t ? `<button class="sm" onclick="dupTpl(${k})">Duplicate</button><button class="sm danger" onclick="rmTpl(${k})">Delete</button>` : ''}</div></div>
+  ${t ? `<div class="card"><div class="row"><div class="f"><label>Dress type name</label><input data-root="DB" data-p="templates.${k}.name" value="${v(t.name)}"></div><div class="f"><label>Category</label><input data-root="DB" data-p="templates.${k}.category" value="${v(t.category)}" placeholder="e.g. Men, Women, Bridal, Kids"></div></div>
+    <div class="grid2" style="margin-top:14px"><div><h3>Measurement fields</h3><textarea rows="14" onchange="setFields(${k},this.value)" style="font-family:ui-monospace,Menlo,monospace;font-size:12.5px">${h(t.fields.map(f => `${f.sec} | ${f.label}`).join('\n'))}</textarea><div class="hint">One per line as <b>Section | Measurement</b>, e.g. “Jacket | Chest”. Measurements are captured per dress type, never generic.</div></div>
+    <div><h3>Default pieces & sub-components</h3>${compTable(`templates.${k}.components`, t.components)}</div></div>
+    <h3 style="margin-top:16px">Default work plan</h3>${taskTable(`templates.${k}.tasks`, t.tasks)}
+    <div class="hint" style="margin-top:10px">${DB.designs.filter(d => d.tplId === t.id).length} catalogue design(s) for this dress type — <a href="#config" onclick="CONF_TAB='designs';CONF_TPL='${t.id}';render();return false">view them</a>.</div></div>` : ''}`;
+}
+function newDesign(){
+  const id = uid('d'); const n = DB.designs.length + 101;
+  DB.designs.push({id, name: 'New design', code: 'DSN-' + n, tplId: CONF_TPL || DB.templates[0]?.id || '', tags: '', description: '', stencils: [], samples: [], renders: [], spin: [], model: '', cover: '', addComps: [], addTasks: [], active: true, created: nowISO()});
+  save(); go('design-' + id);
+}
+function dupDesign(did){ const d = clone(design(did)); d.id = uid('d'); d.name += ' (copy)'; d.code += '-B'; d.created = nowISO(); DB.designs.push(d); save(); go('design-' + d.id); toast('Design duplicated', 'ok'); }
+function delDesign(did){
+  const d = design(did), uses = DB.orders.filter(o => o.items.some(i => i.designId === did)).length;
+  ask(`Delete design “${d.name}”?${uses ? ` It is used on ${uses} order(s); those orders keep their plan but lose the design link.` : ''} Its images are removed too.`, () => {
+    const media = [...d.stencils, ...d.samples, ...d.renders, ...d.spin, d.model];
+    DB.designs = DB.designs.filter(x => x.id !== did); DB.orders.forEach(o => o.items.forEach(i => { if(i.designId === did) i.designId = ''; }));
+    media.forEach(mediaDel); save(); go('config');
+  });
+}
+function thumbs(d, field, ed, back){
+  const L = d[field] || []; if(!L.length) return `<div class="empty" style="padding:16px">Nothing uploaded yet</div>`;
+  const cv = coverOf(d);
+  return `<div class="thumbs">${L.map((id, j) => `<div class="thumb ${ed && cv === id ? 'cover' : ''}" data-media="${id}" onclick="lightbox('${d.id}','${field}',${j},${back ? 1 : 0})">${ed ? `<button class="tbtn x" title="Remove" onclick="event.stopPropagation();rmMedia('${d.id}','${field}',${j})">✕</button><button class="tbtn star" title="Use as cover image" onclick="event.stopPropagation();setCover('${d.id}','${id}')">★</button>` : ''}</div>`).join('')}</div>`;
+}
+function spinHTML(frames, id){
+  return `<div class="spin" id="${id}" data-frames='${JSON.stringify(frames)}'><img alt="360 degree view" draggable="false"><div class="spin-ui"><button class="sm spin-play" onclick="spinPlay('${id}')">▶ Auto-rotate</button><input type="range" min="0" max="${frames.length - 1}" value="0" oninput="spinTo('${id}',+this.value)"><span class="muted" style="font-size:12px;white-space:nowrap">Drag to rotate · ${frames.length} frames</span></div></div>`;
+}
+function initSpins(root){
+  (root || document).querySelectorAll('.spin:not([data-init])').forEach(async el => {
+    el.dataset.init = '1'; const frames = JSON.parse(el.dataset.frames || '[]');
+    const urls = await Promise.all(frames.map(mediaUrl)); el._urls = urls; el._i = 0;
+    const img = el.querySelector('img'); img.src = urls[0] || '';
+    urls.forEach(u => { if(u){ const p = new Image(); p.src = u; } });
+    let down = null, start = 0;
+    img.addEventListener('pointerdown', e => { down = e.clientX; start = el._i; try{ img.setPointerCapture(e.pointerId); }catch(_){} spinStop(el); e.preventDefault(); });
+    img.addEventListener('pointermove', e => { if(down == null) return; const step = Math.max(4, img.clientWidth / (urls.length * 1.2)); spinSet(el, start + Math.round((down - e.clientX) / step)); });
+    const up = () => { down = null; }; img.addEventListener('pointerup', up); img.addEventListener('pointercancel', up);
+  });
+}
+function spinSet(el, i){ const n = el._urls.length; if(!n) return; i = ((i % n) + n) % n; el._i = i; el.querySelector('img').src = el._urls[i]; const r = el.querySelector('input[type=range]'); if(r) r.value = i; }
+function spinTo(id, i){ const el = document.getElementById(id); if(el && el._urls){ spinStop(el); spinSet(el, i); } }
+function spinStop(el){ if(el._t){ clearInterval(el._t); el._t = null; const b = el.querySelector('.spin-play'); if(b) b.textContent = '▶ Auto-rotate'; } }
+function spinPlay(id){
+  const el = document.getElementById(id); if(!el || !el._urls) return; if(el._t) return spinStop(el);
+  el._t = setInterval(() => { if(!document.body.contains(el)){ clearInterval(el._t); return; } spinSet(el, el._i + 1); }, 90);
+  el.querySelector('.spin-play').textContent = '⏸ Pause';
+}
+function vDesign(id){
+  const k = DB.designs.findIndex(d => d.id === id); if(k < 0) return '<div class="card">Design not found. <a href="#config">Back to catalogue</a></div>';
+  const d = DB.designs[k], P = `designs.${k}`; if(d.model) ensureMV();
+  const up = (field, label, accept, multi) => `<label class="btn sm" style="margin:0;color:var(--ink)">⬆ ${label}<input type="file" accept="${accept || 'image/*'}" ${multi === false ? '' : 'multiple'} style="display:none" onchange="upMedia('${d.id}','${field}',this)"></label>`;
+  const sec = (field, title, hint) => `<div class="card"><div class="row" style="align-items:center"><h3 style="margin:0">${title} <span class="muted" style="text-transform:none;letter-spacing:0">(${d[field].length})</span></h3><span class="sp"></span>${up(field, 'Upload')}</div><div class="hint" style="margin:4px 0 10px">${hint}</div>${thumbs(d, field, true)}</div>`;
+  const addon = itemCost({qty: 1, components: d.addComps, tasks: d.addTasks});
+  const uses = DB.orders.filter(o => o.items.some(i => i.designId === d.id));
+  return `<div class="row"><div><div class="muted"><a href="#config">← Configurator</a></div><h1>${h(d.name)}</h1><div class="sub">${h(d.code)} · ${h(tpl(d.tplId)?.name || 'No dress type')} · used on ${uses.length} order(s)</div></div><span class="sp"></span><button onclick="viewDesign('${d.id}')">👁 Client preview</button><button onclick="dupDesign('${d.id}')">Duplicate</button><button class="danger" onclick="delDesign('${d.id}')">Delete</button></div>
+  <div class="card"><h3>Design details</h3>
+    <div class="row"><div class="f"><label>Design name</label><input data-root="DB" data-p="${P}.name" value="${v(d.name)}"></div><div class="f s"><label>Design code</label><input data-root="DB" data-p="${P}.code" value="${v(d.code)}"></div><div class="f"><label>Dress type</label><select data-root="DB" data-p="${P}.tplId" data-r>${opt('', '— any —', d.tplId)}${DB.templates.map(t => opt(t.id, t.name, d.tplId)).join('')}</select></div><label class="inline" style="margin-bottom:8px"><input type="checkbox" data-root="DB" data-p="${P}.active" ${d.active !== false ? 'checked' : ''} data-r> Active in catalogue</label></div>
+    <div class="row"><div class="f"><label>Tags (comma separated)</label><input data-root="DB" data-p="${P}.tags" value="${v(d.tags)}" placeholder="bridal, zardosi, pastel"></div></div>
+    <div style="margin-top:8px"><label>Description (shown to client)</label><textarea rows="2" data-root="DB" data-p="${P}.description">${h(d.description)}</textarea></div></div>
+  <div class="grid2">${sec('samples', 'Sample photos of the actual design', 'Photos of a finished piece or swatch — shown to clients while ordering. ★ sets the catalogue cover.')}${sec('stencils', 'Design stencils', 'Tracing / perforation stencils for the embroidery team. Printed on the job card.')}</div>
+  <div class="grid2">
+    <div class="card"><div class="row" style="align-items:center"><h3 style="margin:0">3D view</h3><span class="sp"></span>${up('renders', '3D render images')}${up('model', '3D model (.glb)', '.glb,model/gltf-binary', false)}</div>
+      <div class="hint" style="margin:4px 0 10px">Upload renders (front / side / back) and/or a .glb model exported from CLO 3D, Marvelous Designer or Blender. The interactive model viewer needs an internet connection.</div>
+      ${d.model ? `<model-viewer data-media="${d.model}" camera-controls auto-rotate shadow-intensity="1" touch-action="pan-y" style="width:100%;height:320px;background:#f4eef0;border-radius:10px;display:block"></model-viewer><div class="row" style="margin:6px 0 10px"><span class="muted">3D model attached — drag to orbit, scroll to zoom.</span><span class="sp"></span><button class="sm ghost danger" onclick="rmModel('${d.id}')">Remove model</button></div>` : ''}
+      ${thumbs(d, 'renders', true)}</div>
+    <div class="card"><div class="row" style="align-items:center"><h3 style="margin:0">360° view <span class="muted" style="text-transform:none;letter-spacing:0">(${d.spin.length} frames)</span></h3><span class="sp"></span>${up('spin', 'Upload frames')}${d.spin.length ? `<button class="sm ghost danger" onclick="clearSpin('${d.id}')">Clear</button>` : ''}</div>
+      <div class="hint" style="margin:4px 0 10px">Take 12–36 photos while turning the dress form in equal steps and upload them together. Frames play in file-name order (img01, img02…).</div>
+      ${d.spin.length ? spinHTML(d.spin, 'sp_' + d.id) : '<div class="empty">No frames yet</div>'}</div>
+  </div>
+  <div class="card"><h3>Design add-ons · added to the order plan when this design is chosen</h3>
+    <div class="hint" style="margin:-4px 0 10px">Extra materials, embroidery hours and any design charge. Estimated add-on input cost: <b>${inr(addon.total)}</b> (materials ${inr(addon.mat)} · labour ${inr(addon.lab)} · external ${inr(addon.ext)}).</div>
+    <h3>Extra materials</h3>${compTable(P + '.addComps', d.addComps)}
+    <h3 style="margin-top:16px">Extra work</h3>${taskTable(P + '.addTasks', d.addTasks)}</div>`;
+}
+async function upMedia(did, field, inp){
+  const d = design(did); const files = [...inp.files].sort((a, b) => a.name.localeCompare(b.name, undefined, {numeric: true})); inp.value = '';
+  if(!files.length) return;
+  if(field === 'spin' && d.spin.length + files.length > 72) return toast('Use at most 72 frames for a 360° view', 'bad');
+  toast(`Processing ${files.length} file${files.length > 1 ? 's' : ''}…`);
+  let n = 0;
+  for(const f of files){
+    try{
+      if(field === 'model'){
+        if(!/\.glb$/i.test(f.name)) throw new Error('3D model must be a .glb file');
+        if(f.size > 25e6) throw new Error('model is larger than 25 MB');
+        const id = uid('m'); await mediaPut(id, f); const old = d.model; d.model = id; mediaDel(old); n++; continue;
+      }
+      const blob = await readImage(f, field === 'spin' ? 1000 : 1400, field === 'stencils' ? 'image/png' : 'image/jpeg');
+      const id = uid('m'); await mediaPut(id, blob); d[field].push(id); n++;
+    }catch(e){ toast(`${f.name}: ${e.message}`, 'bad'); }
+  }
+  d.updated = nowISO(); save(); render(); if(n) toast(`${n} file${n > 1 ? 's' : ''} added`, 'ok');
+  if(!MEDIA.db) toast('Browser storage for images is unavailable — images will be lost on reload', 'bad');
+}
+function rmMedia(did, field, j){ const d = design(did); ask(`Remove this ${(MEDIA_LABEL[field] || 'file').toLowerCase()}?`, () => { const id = d[field].splice(j, 1)[0]; if(d.cover === id) d.cover = ''; mediaDel(id); save(); render(); }); }
+function setCover(did, id){ design(did).cover = id; save(); render(); toast('Cover image set', 'ok'); }
+function rmModel(did){ const d = design(did); ask('Remove the 3D model?', () => { const id = d.model; d.model = ''; mediaDel(id); save(); render(); }); }
+function clearSpin(did){ const d = design(did); ask(`Remove all ${d.spin.length} 360° frames?`, () => { const ids = d.spin; d.spin = []; ids.forEach(mediaDel); save(); render(); }); }
+function lightbox(did, field, j, back){
+  const d = design(did), L = d[field]; j = ((j % L.length) + L.length) % L.length;
+  openModal(`<div class="mbar"><b>${h(d.name)}</b><span class="muted">${MEDIA_LABEL[field]} ${j + 1} of ${L.length}</span><span class="sp"></span>${L.length > 1 ? `<button onclick="lightbox('${did}','${field}',${j - 1},${back})">‹ Prev</button><button onclick="lightbox('${did}','${field}',${j + 1},${back})">Next ›</button>` : ''}${back ? `<button onclick="viewDesign('${did}')">← Design</button>` : ''}<button onclick="closeModal()">Close</button></div><div style="text-align:center;background:#f4eef0;border-radius:10px;padding:10px"><img data-media="${L[j]}" alt="" style="max-width:100%;max-height:70vh;border-radius:6px"></div>`);
+}
+function viewDesign(did){
+  const d = design(did); if(!d) return; if(d.model) ensureMV(); const t = tpl(d.tplId);
+  const part = (f, title) => d[f].length ? `<h3 style="margin-top:16px">${title}</h3>${thumbs(d, f, false, true)}` : '';
+  openModal(`<div class="mbar"><div><b style="font-size:16px">${h(d.name)}</b> <span class="muted">${h(d.code)} · ${h(t?.name || '')}</span></div><span class="sp"></span><a class="btn sm" href="#design-${d.id}" onclick="closeModal()">Edit in Configurator</a><button onclick="closeModal()">Close</button></div>
+  ${d.description ? `<p style="margin-top:0">${h(d.description)}</p>` : ''}${d.tags ? `<div style="margin-bottom:6px">${d.tags.split(',').filter(x => x.trim()).map(x => `<span class="chip c-mut">${h(x.trim())}</span>`).join(' ')}</div>` : ''}
+  ${d.spin.length ? `<h3 style="margin-top:14px">360° view</h3>${spinHTML(d.spin, 'spm_' + d.id)}` : ''}
+  ${d.model ? `<h3 style="margin-top:16px">3D model</h3><model-viewer data-media="${d.model}" camera-controls auto-rotate shadow-intensity="1" style="width:100%;height:360px;background:#f4eef0;border-radius:10px;display:block"></model-viewer>` : ''}
+  ${part('samples', 'Sample photos')}${part('renders', '3D renders')}${part('stencils', 'Stencils')}
+  ${!d.spin.length && !d.model && !d.samples.length && !d.renders.length && !d.stencils.length ? '<div class="empty">No media uploaded for this design yet.</div>' : ''}`);
+}
+
+/* ---- design inside orders ---- */
+function designBar(it, i){
+  const d = design(it.designId), n = DB.designs.filter(x => x.active !== false && x.tplId === it.tplId).length, c = d ? coverOf(d) : '';
+  return `<div class="dbar">${d ? `<div class="dthumb" ${c ? `data-media="${c}"` : ''} onclick="viewDesign('${d.id}')">✦</div><div><div class="muted" style="font-size:12px">Design from catalogue</div><b>${h(d.name)}</b> <span class="muted">${h(d.code)}</span></div>` : `<div class="dthumb">✦</div><div><div class="muted" style="font-size:12px">Design from catalogue</div><span class="muted">None chosen — ${n} design${n === 1 ? '' : 's'} available for this dress type</span></div>`}
+    <span class="sp"></span><button class="sm" onclick="pickDesign(${i})">${d ? 'Change' : 'Choose'} design</button>${d ? `<button class="sm" onclick="viewDesign('${d.id}')">👁 View</button><button class="sm ghost danger" onclick="clearDesign(${i})">Remove</button>` : ''}</div>`;
+}
+function trackDesign(it){
+  const d = design(it.designId); if(!d) return ''; const c = coverOf(d);
+  return `<div class="dbar" style="margin-top:0;margin-bottom:8px"><div class="dthumb" ${c ? `data-media="${c}"` : ''} onclick="viewDesign('${d.id}')">✦</div><div><div class="muted" style="font-size:12px">Design</div><b>${h(d.name)}</b> <span class="muted">${h(d.code)}</span></div><span class="sp"></span><button class="sm" onclick="viewDesign('${d.id}')">👁 View design</button></div>`;
+}
+function jcDesign(it){
+  const d = design(it.designId); if(!d) return '';
+  const imgs = [...d.stencils.slice(0, 2), ...d.samples.slice(0, 1)];
+  return `<h3 style="margin-top:12px">Design: ${h(d.name)} (${h(d.code)})</h3>${imgs.length ? `<div class="row">${imgs.map(id => `<img data-media="${id}" alt="" style="height:150px;border:1px solid #ddd;border-radius:6px">`).join('')}</div>` : ''}`;
+}
+function pickDesign(i){
+  const it = EDIT.items[i], all = DB.designs.filter(d => d.active !== false), list = all.filter(d => d.tplId === it.tplId), other = all.filter(d => d.tplId !== it.tplId);
+  openModal(`<div class="mbar"><b>Choose a design for ${h(it.title)}</b><span class="sp"></span><button onclick="closeModal()">Close</button></div>
+  ${list.length ? designGrid(list, `chooseDesign(${i},'ID')`) : `<div class="empty">No designs for ${h(tpl(it.tplId)?.name || 'this dress type')} yet — add them in Configurator.</div>`}
+  ${other.length ? `<details style="margin-top:12px"><summary>Designs for other dress types (${other.length})</summary>${designGrid(other, `chooseDesign(${i},'ID')`)}</details>` : ''}`);
+}
+function applyDesignAddons(it, d){
+  it.components = it.components.filter(c => !c.fromDesign);
+  it.tasks = it.tasks.filter(t => !t.fromDesign || t.status !== 'pending');
+  d.addComps.forEach(c => it.components.push({...clone(c), id: uid('c'), fromDesign: d.id}));
+  d.addTasks.forEach(x => it.tasks.push({...clone(x), id: uid('t'), workerId: '', status: 'pending', startedAt: null, doneAt: null, fromDesign: d.id}));
+}
+function chooseDesign(i, did){
+  closeModal(); const it = EDIT.items[i], d = design(did); if(!d) return;
+  const had = it.designId; it.designId = did;
+  if(had && had !== did){ it.components = it.components.filter(c => !c.fromDesign); it.tasks = it.tasks.filter(t => !t.fromDesign || t.status !== 'pending'); }
+  render();
+  if(d.addComps.length || d.addTasks.length) ask(`Add “${d.name}” add-ons to this garment's plan? (${d.addComps.length} material(s), ${d.addTasks.length} work item(s), about ${inr(itemCost({qty: 1, components: d.addComps, tasks: d.addTasks}).total)} input cost)`, () => { applyDesignAddons(it, d); render(); toast('Design add-ons added to the plan', 'ok'); });
+  else toast('Design attached', 'ok');
+}
+function clearDesign(i){ const it = EDIT.items[i]; it.designId = ''; it.components = it.components.filter(c => !c.fromDesign); it.tasks = it.tasks.filter(t => !t.fromDesign || t.status !== 'pending'); render(); }
+
+/* ---------------- communication ---------------- */
+const EVENTS = {order_created: 'Order confirmed', trial: 'Trial / fitting reminder', delay: 'Delay notice', ready: 'Ready for pickup', delivered: 'Delivered – thank you', invoice: 'Invoice & payment', payment_reminder: 'Payment reminder', general: 'General / festive greeting', admin_alert: 'Admin alert (to admin)'};
+const PH = ['customer_name', 'customer_first', 'order_no', 'items', 'designs', 'order_date', 'promised_date', 'tentative_date', 'total', 'paid', 'balance', 'invoice_no', 'shop_name', 'shop_mobile', 'shop_address', 'shop_website', 'upi_id', 'today', 'alert_title', 'alert_detail'];
+let COMMS_TAB = 'templates', COMMS_SEL = 0, CMP = null;
+function defaultMsgTemplates(){
+  const M = (id, name, event, channel, auto, body) => ({id, name, event, channel, auto, active: true, body});
+  return [
+    M('m_conf_wa', 'Order confirmation', 'order_created', 'whatsapp', true, 'Namaste {customer_first}! 🙏\nThank you for choosing {shop_name}. Your order {order_no} ({items}) is confirmed.\nPromised delivery: {promised_date}\nOrder value: ₹{total} · Paid: ₹{paid} · Balance: ₹{balance}\nFor any change, call us on {shop_mobile}.'),
+    M('m_conf_sms', 'Order confirmation (SMS)', 'order_created', 'sms', false, '{shop_name}: Order {order_no} confirmed. Delivery by {promised_date}. Balance Rs {balance}. Call {shop_mobile}'),
+    M('m_trial', 'Trial / fitting reminder', 'trial', 'whatsapp', false, 'Hi {customer_first}, your trial for order {order_no} ({items}) is ready. Please visit {shop_name}, {shop_address}, at your convenience, or call {shop_mobile} to book a time.'),
+    M('m_delay', 'Delay notice', 'delay', 'whatsapp', false, 'Dear {customer_first}, we are giving your {items} (order {order_no}) a little extra care. The revised delivery date is {tentative_date}. We regret the inconvenience. – {shop_name}'),
+    M('m_ready', 'Ready for pickup', 'ready', 'whatsapp', true, 'Good news, {customer_first}! ✨ Your order {order_no} is ready for pickup at {shop_name}.\nBalance due: ₹{balance} (UPI: {upi_id}).\nSee you soon!'),
+    M('m_deliv', 'Thank you after delivery', 'delivered', 'whatsapp', true, 'Thank you {customer_first} for collecting order {order_no}. We hope you love it! Free alterations within 7 days. Do share a photo with us 💐\n{shop_name} · {shop_website}'),
+    M('m_inv', 'Invoice & payment details', 'invoice', 'whatsapp', false, 'Dear {customer_first}, invoice {invoice_no} for order {order_no}: total ₹{total}, paid ₹{paid}, balance ₹{balance}.\nPay by UPI to {upi_id}. Thank you! – {shop_name}'),
+    M('m_pay_sms', 'Payment reminder (SMS)', 'payment_reminder', 'sms', false, '{shop_name}: Gentle reminder, Rs {balance} is pending for order {order_no}. UPI {upi_id}. Call {shop_mobile}'),
+    M('m_fest', 'Festive greeting', 'general', 'whatsapp', false, 'Warm festive wishes from all of us at {shop_name}, {customer_first}! 🪔 Our new festive collection is in — drop by or call {shop_mobile} to book a fitting.'),
+    M('m_admin', 'Bottleneck alert to admin', 'admin_alert', 'whatsapp', false, '⚠ {shop_name} production alert\n{alert_title}\n{alert_detail}')
+  ];
+}
+function msgCtx(o, c, extra){
+  const s = ST(), T = o ? orderTotals(o) : null, est = o && o.status === 'open' ? sched().O[o.id] : null, iv = o && o.invoiceId ? inv(o.invoiceId) : null;
+  const n = x => num(x).toLocaleString('en-IN', {minimumFractionDigits: num(x) % 1 ? 2 : 0, maximumFractionDigits: 2});
+  return Object.assign({customer_name: c?.name || '', customer_first: (c?.name || '').split(' ')[0], order_no: o?.no || '', items: o ? o.items.map(i => i.title).join(', ') : '', designs: o ? o.items.map(i => design(i.designId)?.name).filter(Boolean).join(', ') : '', order_date: o ? fmtD(o.created) : '', promised_date: o ? fmtD(o.promised) : '', tentative_date: est ? fmtD(est.delivery) : (o ? fmtD(o.promised) : ''), total: T ? n(T.total) : '', paid: T ? n(T.paid) : '', balance: T ? n(Math.max(0, T.bal)) : '', invoice_no: iv?.no || '', shop_name: s.shop, shop_mobile: s.phone, shop_address: s.address, shop_website: s.website || '', upi_id: s.upiId || '', today: fmtD(todayISO()), alert_title: '', alert_detail: ''}, extra || {});
+}
+const fillMsg = (body, ctx) => String(body || '').replace(/\{(\w+)\}/g, (m, k) => k in ctx ? ctx[k] : m);
+function smsLink(phone, text){ let d = String(phone || '').replace(/\D/g, ''); if(d.length === 10) d = '91' + d; return `sms:${d ? '+' + d : ''}?body=${encodeURIComponent(text)}`; }
+function smsInfo(t){ const uni = /[^\x00-\x7F]/.test(t), per = uni ? (t.length > 70 ? 67 : 70) : (t.length > 160 ? 153 : 160), seg = Math.max(1, Math.ceil(t.length / per)); return `${t.length} characters · ${seg} SMS part${seg > 1 ? 's' : ''}${uni ? ' (Unicode — emoji and ₹ shorten each SMS part)' : ''}`; }
+function adminMsg(a){ const t = DB.msgTemplates.find(x => x.event === 'admin_alert' && x.active !== false); const o = a.oid ? ord(a.oid) : null; return fillMsg(t ? t.body : '⚠ {shop_name}: {alert_title}\n{alert_detail}', msgCtx(o, o ? cust(o.customerId) : null, {alert_title: a.title, alert_detail: a.detail})); }
+function autoMsg(oid, ev){ const t = DB.msgTemplates.find(x => x.event === ev && x.active !== false && x.auto); if(t) openCompose(oid, ev, null, t.id); }
+function openCompose(oid, ev, cid, tplId){
+  const o = oid ? ord(oid) : null, c = cust(cid || o?.customerId); if(!c) return toast('No customer for this message', 'bad');
+  const list = DB.msgTemplates.filter(t => t.active !== false && t.event !== 'admin_alert');
+  const t = list.find(x => x.id === tplId) || list.find(x => x.event === ev) || list[0];
+  CMP = {oid: o?.id || null, cid: c.id, tplId: t?.id || ''};
+  const txt = t ? fillMsg(t.body, msgCtx(o, c)) : '';
+  openModal(`<div class="mbar"><b>Message ${h(c.name)}</b>${o ? `<span class="muted">· ${h(o.no)}</span>` : ''}${ev && EVENTS[ev] ? `<span class="chip c-acc">${h(EVENTS[ev])}</span>` : ''}<span class="sp"></span><button onclick="closeModal()">Close</button></div>
+  <div class="row"><div class="f"><label>Preset</label><select id="cmpTpl" onchange="cmpTpl(this.value)">${list.map(x => opt(x.id, `${x.name} · ${x.channel === 'sms' ? 'SMS' : x.channel === 'both' ? 'WhatsApp + SMS' : 'WhatsApp'}`, CMP.tplId)).join('')}</select></div><div class="f" style="max-width:220px"><label>Mobile</label><input id="cmpTo" value="${v(c.phone)}" oninput="cmpLinks()"></div></div>
+  <div style="margin-top:10px"><label>Message (edit before sending)</label><textarea id="cmpText" rows="8" oninput="cmpLinks()">${h(txt)}</textarea><div class="hint" id="cmpCount"></div></div>
+  <div class="row" style="margin-top:10px"><a class="btn pri" id="cmpWA" target="_blank" rel="noopener" onclick="logSend('WhatsApp')">💬 Open in WhatsApp</a><a class="btn" id="cmpSMS" target="_blank" rel="noopener" onclick="logSend('SMS')">✉ Open in SMS</a><button onclick="copyText('cmpText');logSend('Copied')">📋 Copy</button></div>
+  <div class="hint">WhatsApp / SMS opens on this device with the message filled in — you press send. Fully automatic sending needs an SMS or WhatsApp Business API provider.</div>`);
+  cmpLinks();
+}
+function cmpTpl(id){ const t = DB.msgTemplates.find(x => x.id === id); CMP.tplId = id; const o = CMP.oid ? ord(CMP.oid) : null; document.getElementById('cmpText').value = fillMsg(t.body, msgCtx(o, cust(CMP.cid))); cmpLinks(); }
+function cmpLinks(){ const txt = document.getElementById('cmpText').value, to = document.getElementById('cmpTo').value; document.getElementById('cmpWA').href = waLink(to, txt); document.getElementById('cmpSMS').href = smsLink(to, txt); document.getElementById('cmpCount').textContent = smsInfo(txt); }
+function logSend(ch){
+  const txt = document.getElementById('cmpText').value, t = DB.msgTemplates.find(x => x.id === CMP.tplId);
+  DB.msgLog.push({id: uid('ml'), at: nowISO(), orderId: CMP.oid, customerId: CMP.cid, to: document.getElementById('cmpTo').value, channel: ch, tplId: CMP.tplId, tplName: t?.name || 'Custom', text: txt});
+  const o = CMP.oid && ord(CMP.oid); if(o) o.log.push({at: nowISO(), kind: 'msg', msg: `${ch === 'Copied' ? 'Message copied' : ch + ' message opened'}: ${t?.name || 'custom'}`});
+  save(); if(ch === 'Copied') return; toast(`${ch} opened — logged in Communication`, 'ok');
+}
+function vComms(){
+  const L = DB.msgTemplates, k = Math.max(0, Math.min(COMMS_SEL, L.length - 1)), t = L[k];
+  const head = `<div class="row"><div><h1>Communication</h1><div class="sub">Preset SMS and WhatsApp messages. Order details fill in automatically; messages open in WhatsApp or SMS ready to send.</div></div><span class="sp"></span><button onclick="quickCompose()">💬 New message</button></div>
+  <div class="tabs">${[['templates', `Message presets (${L.length})`], ['log', `Sent log (${DB.msgLog.length})`]].map(([x, l]) => `<button class="${COMMS_TAB === x ? 'pri' : ''}" onclick="COMMS_TAB='${x}';render()">${l}</button>`).join('')}</div>`;
+  if(COMMS_TAB === 'log') return head + commsLog();
+  const sampleO = DB.orders.find(o => o.status === 'open') || DB.orders[0];
+  return head + `<div class="comms"><div class="card" style="padding:8px">${L.map((x, j) => `<div class="tli ${j === k ? 'on' : ''}" onclick="COMMS_SEL=${j};render()"><b>${h(x.name)}</b><div class="muted" style="font-size:12px">${h(EVENTS[x.event] || x.event)} · ${x.channel === 'both' ? 'WhatsApp + SMS' : x.channel === 'sms' ? 'SMS' : 'WhatsApp'}${x.auto ? ' · auto-prompt' : ''}${x.active === false ? ' · <span class="danger">off</span>' : ''}</div></div>`).join('')}<button class="sm" style="margin:8px" onclick="addMsgTpl()">+ New preset</button></div>
+  ${t ? `<div class="card">
+    <div class="row"><div class="f"><label>Preset name</label><input data-root="DB" data-p="msgTemplates.${k}.name" value="${v(t.name)}"></div><div class="f"><label>Used for</label><select data-root="DB" data-p="msgTemplates.${k}.event" data-r>${Object.entries(EVENTS).map(([e, l]) => opt(e, l, t.event)).join('')}</select></div><div class="f s"><label>Channel</label><select data-root="DB" data-p="msgTemplates.${k}.channel" data-r>${opt('whatsapp', 'WhatsApp', t.channel)}${opt('sms', 'SMS', t.channel)}${opt('both', 'Both', t.channel)}</select></div></div>
+    <div class="row" style="margin-top:10px;align-items:center"><label class="inline"><input type="checkbox" data-root="DB" data-p="msgTemplates.${k}.auto" ${t.auto ? 'checked' : ''} data-r> Offer to send when this event happens</label><label class="inline"><input type="checkbox" data-root="DB" data-p="msgTemplates.${k}.active" ${t.active !== false ? 'checked' : ''} data-r> Active</label><span class="sp"></span><button class="sm" onclick="dupMsgTpl(${k})">Duplicate</button><button class="sm danger" onclick="rmMsgTpl(${k})">Delete</button></div>
+    <div style="margin-top:10px"><label>Message text</label><textarea id="tplBody" rows="7" data-root="DB" data-p="msgTemplates.${k}.body" oninput="commsPrev()">${h(t.body)}</textarea></div>
+    <div style="margin-top:6px"><span class="muted" style="font-size:12px">Insert field: </span>${PH.map(p => `<button class="sm ph" onclick="insPh('{${p}}')">{${p}}</button>`).join('')}</div>
+    <h3 style="margin-top:16px">Preview${sampleO ? ` · filled with ${h(sampleO.no)}` : ''}</h3><div id="tplPrev" class="msg-prev"></div><div class="hint" id="tplCount"></div>
+    <div class="hint">Auto-prompt events: order saved → “Order confirmed”, marked ready → “Ready for pickup”, delivered → “Delivered – thank you”. Delay notices are offered on at-risk orders; invoice messages from the invoice window.</div></div>` : '<div class="card">No presets.</div>'}</div>`;
+}
+function commsLog(){
+  const L = DB.msgLog.slice().reverse();
+  return `<div class="card">${L.length ? `<div class="row" style="margin-bottom:8px"><span class="sp"></span><button class="sm ghost danger" onclick="ask('Clear the message log?',()=>{DB.msgLog=[];save();render()})">Clear log</button></div><table><thead><tr><th>When</th><th>Customer</th><th>Order</th><th>Channel</th><th>Preset</th><th>Message</th></tr></thead><tbody>
+  ${L.map(m => { const o = m.orderId && ord(m.orderId); return `<tr><td class="muted" style="white-space:nowrap">${fmtDT(m.at)}</td><td>${h(cust(m.customerId)?.name || '—')}<div class="muted" style="font-size:11.5px">${h(m.to)}</div></td><td>${o ? `<a href="#order-${o.id}">${h(o.no)}</a>` : '—'}</td><td><span class="chip ${m.channel === 'WhatsApp' ? 'c-ok' : m.channel === 'SMS' ? 'c-info' : 'c-mut'}">${h(m.channel)}</span></td><td>${h(m.tplName)}</td><td style="max-width:420px;font-size:12.5px;white-space:pre-wrap">${h(m.text.length > 220 ? m.text.slice(0, 220) + '…' : m.text)}</td></tr>`; }).join('')}</tbody></table>` : '<div class="empty">No messages yet. Messages opened from orders, customers or here are logged automatically.</div>'}</div>`;
+}
+function commsPrev(){
+  const el = document.getElementById('tplBody'); if(!el) return;
+  const o = DB.orders.find(x => x.status === 'open') || DB.orders[0];
+  const txt = fillMsg(el.value, msgCtx(o, o ? cust(o.customerId) : null, {alert_title: 'Stage bottleneck', alert_detail: 'Embroidery queue is 3.1 working days (43 h across 2 workers).'}));
+  document.getElementById('tplPrev').textContent = txt; document.getElementById('tplCount').textContent = smsInfo(txt);
+}
+function insPh(p){ const el = document.getElementById('tplBody'); if(!el) return; const s = el.selectionStart ?? el.value.length, e = el.selectionEnd ?? s; el.value = el.value.slice(0, s) + p + el.value.slice(e); el.focus(); el.selectionStart = el.selectionEnd = s + p.length; el.dispatchEvent(new Event('input', {bubbles: true})); }
+function addMsgTpl(){ DB.msgTemplates.push({id: uid('m'), name: 'New preset', event: 'general', channel: 'whatsapp', auto: false, active: true, body: 'Hi {customer_first}, '}); COMMS_SEL = DB.msgTemplates.length - 1; save(); render(); }
+function dupMsgTpl(k){ const t = clone(DB.msgTemplates[k]); t.id = uid('m'); t.name += ' (copy)'; DB.msgTemplates.push(t); COMMS_SEL = DB.msgTemplates.length - 1; save(); render(); }
+function rmMsgTpl(k){ ask(`Delete preset “${DB.msgTemplates[k].name}”?`, () => { DB.msgTemplates.splice(k, 1); COMMS_SEL = 0; save(); render(); }); }
+function quickCompose(){
+  if(!DB.customers.length) return toast('Add a customer first', 'bad');
+  openModal(`<div class="mbar"><b>New message</b><span class="sp"></span><button onclick="closeModal()">Close</button></div><div class="row"><div class="f"><label>Customer</label><select id="qcC" onchange="qcOrders()">${DB.customers.slice().sort((a, b) => a.name.localeCompare(b.name)).map(c => opt(c.id, c.name)).join('')}</select></div><div class="f"><label>Order (optional)</label><select id="qcO"></select></div></div><div class="row" style="margin-top:12px"><span class="sp"></span><button class="pri" onclick="openCompose(document.getElementById('qcO').value||null,null,document.getElementById('qcC').value)">Continue</button></div>`);
+  qcOrders();
+}
+function qcOrders(){ const cid = document.getElementById('qcC').value; document.getElementById('qcO').innerHTML = opt('', '— none —') + DB.orders.filter(o => o.customerId === cid).map(o => opt(o.id, `${o.no} · ${statusLabel(o)}`)).join(''); }
+
+/* ---------------- backup with images ---------------- */
+async function exportData(withMedia){
+  const data = clone(DB);
+  if(withMedia){
+    toast('Packing images…'); data._media = {}; const ids = new Set();
+    DB.designs.forEach(d => [...d.stencils, ...d.samples, ...d.renders, ...d.spin, d.model].forEach(x => { if(x && !x.startsWith('demo:')) ids.add(x); }));
+    for(const id of ids){ const b = await mediaGet(id); if(b) data._media[id] = await blobToDataURL(b); }
+  }
+  const json = JSON.stringify(data);
+  if(IN_FRAME){
+    openModal(`<div class="mbar"><b>Backup data (JSON)${withMedia ? ' with images' : ''}</b><span class="sp"></span><button onclick="copyText('bk')">📋 Copy</button><button onclick="closeModal()">Close</button></div><div class="hint" style="margin-bottom:8px">Downloads are blocked in the shared viewer. Copy this text and save it as a .json file to back up or move your data (${(json.length / 1e6).toFixed(1)} MB).</div><textarea id="bk" rows="16" readonly style="font-family:ui-monospace,monospace;font-size:11px">${h(json.length > 3e6 ? json.slice(0, 3e6) : json)}</textarea>${json.length > 3e6 ? '<div class="hint danger">Too large to show here — export without images, or open the app as a local file to download.</div>' : ''}`);
+    return;
+  }
+  const b = new Blob([json], {type: 'application/json'}), a = document.createElement('a');
+  a.href = URL.createObjectURL(b); a.download = `boutique-backup-${todayISO()}${withMedia ? '-with-images' : ''}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+}
+function importData(inp){
+  const f = inp.files[0]; if(!f) return; const r = new FileReader();
+  r.onload = () => {
+    try{
+      const x = JSON.parse(r.result); if(!x.settings || !x.orders) throw new Error('Not a backup file');
+      ask('Replace all current data with this backup?', async () => {
+        const media = x._media || {}; delete x._media; DB = x; migrate();
+        for(const [id, u] of Object.entries(media)) await mediaPut(id, dataURLToBlob(u));
+        save(); render(); toast('Backup imported', 'ok');
+      });
+    }catch(e){ toast('Import failed: ' + e.message, 'bad'); }
+  };
+  r.readAsText(f); inp.value = '';
+}
+
+/* ---------------- boot ---------------- */
+DB = load() || seed();
+migrate(); save();
+mediaOpen().then(() => { render(); setTimeout(checkNotify, 600); });
+setInterval(() => { if(route().v !== 'edit' && !document.getElementById('modal').classList.contains('on')){ render(); checkNotify(); } }, 5 * 60 * 1000);
+</script>
+</body>
+</html>
